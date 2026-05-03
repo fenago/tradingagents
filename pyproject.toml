@@ -27,9 +27,15 @@ dependencies = [
     "typer>=0.21.0",
     "setuptools>=80.9.0",
     "stockstats>=0.6.5",
+    "supabase>=2.7.0",
     "tqdm>=4.67.1",
     "typing-extensions>=4.14.0",
     "yfinance>=0.2.63",
+]
+
+[project.optional-dependencies]
+saas = [
+    "supabase>=2.7.0",
 ]
 
 [project.scripts]

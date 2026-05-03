@@ -1,0 +1,39 @@
+# StockBrief — Fly.io worker configuration
+#
+# Deploys the Python SaaS worker that polls Supabase for queued runs and
+# executes the TradingAgents analysis graph. No HTTP service — pure
+# background work.
+#
+# Set these as Fly secrets before first deploy:
+#   fly secrets set SUPABASE_URL=https://eenypxzkgbirujlmtjqp.supabase.co
+#   fly secrets set SUPABASE_SERVICE_ROLE_KEY=...
+#   fly secrets set ANTHROPIC_API_KEY=...
+#   # Optional, by provider:
+#   # fly secrets set OPENAI_API_KEY=...
+#   # fly secrets set GOOGLE_API_KEY=...
+#   # fly secrets set ALPHA_VANTAGE_API_KEY=...
+
+app = "stockbrief-worker"
+primary_region = "iad"
+
+[build]
+  dockerfile = "Dockerfile.worker"
+
+[env]
+  POLL_INTERVAL_SECONDS = "5"
+  HEARTBEAT_SECONDS = "8"
+  LOG_LEVEL = "INFO"
+  PYTHONUNBUFFERED = "1"
+
+# Single worker process. Bump count later when load demands.
+# Memory: TradingAgents graph + LangChain + yfinance ≈ 600-900MB working set.
+[[vm]]
+  size = "shared-cpu-2x"
+  memory = "2gb"
+  processes = ["app"]
+
+[processes]
+  app = "python -m tradingagents.saas.worker"
+
+# No services — worker has no inbound HTTP. Health checked via Fly's
+# process supervisor (worker exits non-zero → Fly restarts).
