@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react"
 import { motion } from "framer-motion"
 import {
   Check,
+  KeyRound,
   Quote,
   RotateCcw,
   Save,
@@ -20,6 +21,7 @@ import { AgentAvatar } from "@/components/run/AgentAvatar"
 import { BrokerageSettings } from "@/components/settings/BrokerageSettings"
 import { RunDefaultsSettings } from "@/components/settings/RunDefaultsSettings"
 import { AccountSettings } from "@/components/settings/AccountSettings"
+import { ModelsKeysSettings } from "@/components/settings/ModelsKeysSettings"
 import { PERSONAS, type Persona } from "@/lib/agent_personas"
 import { PHASES } from "@/hooks/useDirector"
 import { usePersonas } from "@/hooks/usePersonas"
@@ -81,6 +83,10 @@ export function SettingsRoute() {
             <Users className="size-3.5" />
             The Cast
           </TabsTrigger>
+          <TabsTrigger value="keys" className="gap-2">
+            <KeyRound className="size-3.5" />
+            Models &amp; Keys
+          </TabsTrigger>
           <TabsTrigger value="brokerage" className="gap-2">
             <Wallet className="size-3.5" />
             Brokerage
@@ -94,6 +100,10 @@ export function SettingsRoute() {
 
         <TabsContent value="cast" className="mt-6">
           <CastSettings />
+        </TabsContent>
+
+        <TabsContent value="keys" className="mt-6">
+          <ModelsKeysSettings />
         </TabsContent>
 
         <TabsContent value="brokerage" className="mt-6">

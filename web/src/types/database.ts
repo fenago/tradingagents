@@ -16,25 +16,25 @@ export type Database = {
     Tables: {
       api_keys_encrypted: {
         Row: {
-          ciphertext: string
           created_at: string
           hint: string
+          key_secret_id: string
           provider: Database["public"]["Enums"]["llm_provider"]
           updated_at: string
           user_id: string
         }
         Insert: {
-          ciphertext: string
           created_at?: string
           hint: string
+          key_secret_id: string
           provider: Database["public"]["Enums"]["llm_provider"]
           updated_at?: string
           user_id: string
         }
         Update: {
-          ciphertext?: string
           created_at?: string
           hint?: string
+          key_secret_id?: string
           provider?: Database["public"]["Enums"]["llm_provider"]
           updated_at?: string
           user_id?: string
