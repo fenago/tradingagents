@@ -48,10 +48,12 @@ export function PortfolioRoute() {
   const paperConn = connections.find((c) => c.paper_mode)
   const liveConn = connections.find((c) => !c.paper_mode)
   const hasBoth = !!paperConn && !!liveConn
-  const initialMode: "paper" | "live" = paperConn ? "paper" : "live"
-  const [mode, setMode] = useState<"paper" | "live">(initialMode)
+  // Default to "paper" — but `active` falls back so a user with only one
+  // connection always sees that one regardless of state.
+  const [mode, setMode] = useState<"paper" | "live">("paper")
 
-  const active = mode === "paper" ? paperConn : liveConn
+  const active =
+    (mode === "paper" ? paperConn : liveConn) ?? paperConn ?? liveConn
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-10">
