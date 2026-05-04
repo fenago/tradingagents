@@ -22,6 +22,7 @@ import { useTheme } from "@/lib/theme"
 import { useAuth } from "@/hooks/useAuth"
 import { Button } from "@/components/ui/button"
 import { sfx } from "@/lib/sfx"
+import { CreditBalanceWidget } from "@/components/layout/CreditBalanceWidget"
 
 const navItems = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, hue: 250 },
@@ -198,6 +199,7 @@ export function AppShell() {
         </nav>
 
         <div className="relative space-y-1 border-t border-sidebar-border p-3">
+          <CreditBalanceWidget />
           <div className="mb-2 flex items-center gap-2 rounded-md bg-sidebar-accent/40 px-2 py-2">
             <div
               className="grid size-7 place-items-center rounded-full text-xs font-semibold text-white"

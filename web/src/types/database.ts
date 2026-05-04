@@ -52,6 +52,39 @@ export type Database = {
           },
         ]
       }
+      credit_transactions: {
+        Row: {
+          cost_usd: number | null
+          delta: number
+          id: number
+          metadata: Json | null
+          reason: string
+          run_id: string | null
+          ts: string
+          user_id: string
+        }
+        Insert: {
+          cost_usd?: number | null
+          delta: number
+          id?: number
+          metadata?: Json | null
+          reason: string
+          run_id?: string | null
+          ts?: string
+          user_id: string
+        }
+        Update: {
+          cost_usd?: number | null
+          delta?: number
+          id?: number
+          metadata?: Json | null
+          reason?: string
+          run_id?: string | null
+          ts?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       api_keys_encrypted: {
         Row: {
           created_at: string
@@ -255,6 +288,7 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          credit_balance: number
           display_name: string | null
           email: string
           id: string
@@ -268,6 +302,7 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          credit_balance?: number
           display_name?: string | null
           email: string
           id: string
@@ -281,6 +316,7 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           created_at?: string
+          credit_balance?: number
           display_name?: string | null
           email?: string
           id?: string

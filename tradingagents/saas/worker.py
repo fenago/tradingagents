@@ -35,6 +35,7 @@ from tradingagents.graph.trading_graph import TradingAgentsGraph
 from .client import (
     append_event,
     claim_next_queued_run,
+    consume_credits_for_run,
     make_client,
     update_run,
     upsert_reports,
@@ -178,17 +179,31 @@ def run_one(client: Client, run: Dict[str, Any]) -> None:
         one_liner = _first_sentence(final_decision)
 
         s = stats.get_stats()
+        final_cost = estimate_cost(s["tokens_in"], s["tokens_out"])
         update_run(
             client,
             run_id,
             status="completed",
             completed_at=utcnow_iso(),
-            cost_usd=estimate_cost(s["tokens_in"], s["tokens_out"]),
+            cost_usd=final_cost,
             tokens_in=s["tokens_in"],
             tokens_out=s["tokens_out"],
             verdict=verdict_value,
             one_liner=one_liner,
         )
+
+        # Deduct credits proportional to the run's underlying cost. The
+        # caller's balance can go negative if they had no credits — we still
+        # complete the run; the next run-launch guard catches it.
+        try:
+            consume_credits_for_run(
+                client,
+                user_id=run["user_id"],
+                run_id=run_id,
+                cost_usd=final_cost,
+            )
+        except Exception as e:  # noqa: BLE001
+            logger.warning("Credit deduction failed for run %s: %s", run_id, e)
 
         # Memory log: store the decision so future runs reflect on it.
         try:

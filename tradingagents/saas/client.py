@@ -109,3 +109,42 @@ def upsert_reports(
     if not payload:
         return
     client.table("reports").upsert(payload).execute()
+
+
+# 1 credit ≈ $0.04 of underlying compute cost. Margin sits in the retail
+# rate the user paid for credits ($0.066–$0.15 / credit depending on tier).
+CREDIT_COST_USD = 0.04
+
+
+def credits_for_cost(cost_usd: float) -> int:
+    """Convert a raw run cost into credit consumption (rounded up)."""
+    if not cost_usd or cost_usd <= 0:
+        return 0
+    import math
+
+    return int(math.ceil(cost_usd / CREDIT_COST_USD))
+
+
+def consume_credits_for_run(
+    client: Client, *, user_id: str, run_id: str, cost_usd: float
+) -> Optional[int]:
+    """Deduct credits proportional to the run's cost. Returns the new balance."""
+    credits = credits_for_cost(cost_usd)
+    if credits <= 0:
+        return None
+    try:
+        res = client.rpc(
+            "consume_credits",
+            {
+                "p_user_id": user_id,
+                "p_credits": credits,
+                "p_run_id": run_id,
+                "p_cost_usd": cost_usd,
+            },
+        ).execute()
+        return res.data if res.data is not None else None
+    except Exception as e:  # noqa: BLE001
+        logger.warning(
+            "consume_credits failed for run %s (user %s): %s", run_id, user_id, e
+        )
+        return None

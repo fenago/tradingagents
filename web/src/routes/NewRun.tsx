@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react"
-import { useNavigate, useSearchParams } from "react-router-dom"
+import { Link, useNavigate, useSearchParams } from "react-router-dom"
 import { motion } from "framer-motion"
-import { ArrowRight, Calendar, Sparkles } from "lucide-react"
+import { AlertTriangle, ArrowRight, Calendar, Coins, Sparkles } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -12,6 +12,8 @@ import { useAuth } from "@/hooks/useAuth"
 import { useProfile } from "@/hooks/useProfile"
 import { PERSONAS } from "@/lib/agent_personas"
 import { AgentAvatar } from "@/components/run/AgentAvatar"
+import { estimateRunCredits, useCreditBalance } from "@/hooks/useCredits"
+import { cn } from "@/lib/utils"
 
 const TICKER_HINT = "Examples: NVDA, AAPL, SPY, BRK.B"
 
@@ -33,6 +35,14 @@ export function NewRunRoute() {
     if (q) setTicker(q.toUpperCase())
   }, [searchParams])
 
+  const { data: balance } = useCreditBalance()
+  const estimate = useMemo(
+    () => estimateRunCredits((profile?.run_defaults ?? {}) as never),
+    [profile?.run_defaults],
+  )
+  const insufficient =
+    typeof balance === "number" && balance < estimate.lo
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
     const t = ticker.trim().toUpperCase()
@@ -41,6 +51,12 @@ export function NewRunRoute() {
       return
     }
     if (!user) return
+    if (insufficient) {
+      toast.error("Not enough credits to run this analysis.", {
+        description: `This run is estimated at ${estimate.lo}–${estimate.hi} credits. Top up in Pricing.`,
+      })
+      return
+    }
 
     setSubmitting(true)
     const { data, error } = await supabase
@@ -158,12 +174,60 @@ export function NewRunRoute() {
           </ul>
         </div>
 
+        {/* Cost estimator + balance */}
+        <div
+          className={cn(
+            "flex flex-wrap items-center gap-3 rounded-xl border bg-card p-4",
+            insufficient ? "border-sell/40 bg-sell/5" : "border-border",
+          )}
+        >
+          <div
+            className={cn(
+              "grid size-9 place-items-center rounded-md",
+              insufficient
+                ? "bg-sell/15 text-sell"
+                : "bg-primary/10 text-primary",
+            )}
+          >
+            {insufficient ? (
+              <AlertTriangle className="size-4" />
+            ) : (
+              <Coins className="size-4" />
+            )}
+          </div>
+          <div className="flex-1">
+            <div className="flex flex-wrap items-baseline gap-2 text-sm">
+              <span className="font-semibold">
+                Estimated cost: {estimate.lo}–{estimate.hi} credits
+              </span>
+              <span className="text-xs text-muted-foreground">
+                (~${estimate.usd.toFixed(2)} of underlying compute)
+              </span>
+            </div>
+            <div className="mt-0.5 text-[11px] text-muted-foreground">
+              Your balance:{" "}
+              <span className="font-mono tabular-nums text-foreground">
+                {(balance ?? 0).toLocaleString()}
+              </span>{" "}
+              credits.{" "}
+              {insufficient
+                ? "Not enough — top up to run this analysis."
+                : "You'll be charged the actual usage when the run finishes."}
+            </div>
+          </div>
+          {insufficient && (
+            <Button asChild size="sm" variant="outline">
+              <Link to="/pricing">Top up</Link>
+            </Button>
+          )}
+        </div>
+
         <div className="flex items-center gap-3">
           <Button
             type="submit"
             size="lg"
             className="gap-2"
-            disabled={submitting || !ticker.trim()}
+            disabled={submitting || !ticker.trim() || insufficient}
           >
             {submitting ? (
               <span className="size-4 animate-spin rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground" />
@@ -174,9 +238,8 @@ export function NewRunRoute() {
           </Button>
 
           <p className="text-xs text-muted-foreground">
-            Worker isn't wired yet — your run will queue and you'll see the
-            run page in queued state. Live agent execution lands when we wire
-            the Python worker.
+            Live LLM run on Fly.io. You'll be charged on completion based
+            on real token usage.
           </p>
         </div>
 
