@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Link } from "react-router-dom"
-import { Loader2, MessageCircle, Send, Sparkles, X } from "lucide-react"
+import { Loader2, MessageCircle, Mic, MicOff, Send, Sparkles, Volume2, VolumeX, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -9,6 +9,8 @@ import { AgentAvatar } from "@/components/run/AgentAvatar"
 import { ReportMarkdown } from "@/components/run/ReportMarkdown"
 import { useAgentChat, useAgentConversation } from "@/hooks/useAgentChat"
 import { usePersonas } from "@/hooks/usePersonas"
+import { speak, useSpeechToText } from "@/hooks/useDeepgram"
+import { useProfile } from "@/hooks/useProfile"
 import { cn } from "@/lib/utils"
 
 const SUGGESTIONS_BY_GROUP: Record<string, string[]> = {
@@ -50,6 +52,11 @@ export function AgentChatPanel({
 }) {
   const { getPersona } = usePersonas()
   const persona = getPersona(agentKey)
+  const { data: profile } = useProfile()
+  const voiceId =
+    (profile?.persona_overrides as Record<string, { voice_id?: string }>)?.[
+      agentKey
+    ]?.voice_id
   const { data: conversation, isLoading } = useAgentConversation(
     runId,
     agentKey,
@@ -58,7 +65,10 @@ export function AgentChatPanel({
     runId,
     agentKey,
   )
+  const stt = useSpeechToText()
   const [input, setInput] = useState("")
+  const [autoSpeak, setAutoSpeak] = useState(false)
+  const lastSpokenRef = useRef<string | null>(null)
 
   const messages = conversation ?? []
   const showStreaming = state === "streaming" && streaming.length > 0
@@ -89,6 +99,29 @@ export function AgentChatPanel({
     if (!msg) return
     setInput("")
     await send(msg)
+  }
+
+  // Auto-speak the latest assistant message when autoSpeak + voiceId set
+  useEffect(() => {
+    if (!autoSpeak || !voiceId || state !== "idle") return
+    const last = messages[messages.length - 1]
+    if (!last || last.role !== "assistant") return
+    const id = `${messages.length}:${last.content.slice(0, 64)}`
+    if (lastSpokenRef.current === id) return
+    lastSpokenRef.current = id
+    void speak(last.content, voiceId)
+  }, [autoSpeak, voiceId, state, messages])
+
+  const toggleMic = async () => {
+    if (stt.recording) {
+      const text = await stt.stop()
+      if (text) {
+        setInput("")
+        await send(text)
+      }
+    } else {
+      await stt.start()
+    }
   }
 
   const suggestions = SUGGESTIONS_BY_GROUP[persona.group] ?? []
@@ -131,6 +164,25 @@ export function AgentChatPanel({
             "{persona.signature}"
           </p>
         </div>
+        {voiceId && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setAutoSpeak((v) => !v)}
+            aria-label={autoSpeak ? "Mute voice replies" : "Hear voice replies"}
+            title={autoSpeak ? "Mute voice replies" : "Hear voice replies"}
+            className={cn(
+              "text-muted-foreground hover:text-foreground",
+              autoSpeak && "text-primary",
+            )}
+          >
+            {autoSpeak ? (
+              <Volume2 className="size-4" />
+            ) : (
+              <VolumeX className="size-4" />
+            )}
+          </Button>
+        )}
         <Button
           variant="ghost"
           size="icon"
@@ -217,18 +269,38 @@ export function AgentChatPanel({
         onSubmit={handleSubmit}
         className="flex gap-2 border-t border-border bg-card p-3"
       >
+        <Button
+          type="button"
+          size="icon"
+          variant={stt.recording ? "default" : "outline"}
+          onClick={toggleMic}
+          disabled={state !== "idle"}
+          aria-label={stt.recording ? "Stop recording" : "Start voice"}
+          title={stt.recording ? "Stop recording" : "Push to talk"}
+          className={cn(stt.recording && "bg-sell text-white hover:bg-sell/90")}
+        >
+          {stt.recording ? (
+            <MicOff className="size-4" />
+          ) : (
+            <Mic className="size-4" />
+          )}
+        </Button>
         <Input
           ref={inputRef}
-          value={input}
+          value={stt.recording ? stt.transcript : input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder={`Ask ${persona.name.split(" ")[0]} anything…`}
-          disabled={state !== "idle"}
+          placeholder={
+            stt.recording
+              ? "Listening…"
+              : `Ask ${persona.name.split(" ")[0]} anything…`
+          }
+          disabled={state !== "idle" || stt.recording}
           className="flex-1"
         />
         <Button
           type="submit"
           size="icon"
-          disabled={state !== "idle" || !input.trim()}
+          disabled={state !== "idle" || !input.trim() || stt.recording}
           aria-label="Send message"
         >
           {state === "idle" ? (

@@ -22,6 +22,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton"
 import { AgentAvatar } from "@/components/run/AgentAvatar"
+import { AURA_VOICES, speak } from "@/hooks/useDeepgram"
+import { Volume2 } from "lucide-react"
 import { BrokerageSettings } from "@/components/settings/BrokerageSettings"
 import { RunDefaultsSettings } from "@/components/settings/RunDefaultsSettings"
 import { AccountSettings } from "@/components/settings/AccountSettings"
@@ -187,10 +189,32 @@ function CastSettings() {
     setDraft((prev) => {
       const next = { ...prev }
       const trimmed = name.trim()
-      if (!trimmed) {
+      const existing = next[key] ?? {}
+      if (!trimmed && !existing.voice_id && !existing.personality) {
         delete next[key]
       } else {
-        next[key] = { ...(next[key] ?? {}), name: trimmed }
+        next[key] = { ...existing, name: trimmed || undefined }
+      }
+      return next
+    })
+  }
+
+  const setVoice = (key: string, voiceId: string | undefined) => {
+    setDraft((prev) => {
+      const next = { ...prev }
+      const existing = next[key] ?? {}
+      next[key] = { ...existing, voice_id: voiceId }
+      return next
+    })
+  }
+
+  const setPersonality = (key: string, personality: string) => {
+    setDraft((prev) => {
+      const next = { ...prev }
+      const existing = next[key] ?? {}
+      next[key] = {
+        ...existing,
+        personality: personality.trim() || undefined,
       }
       return next
     })
@@ -281,7 +305,11 @@ function CastSettings() {
                     hue={base.hue}
                     signature={base.signature}
                     currentName={draft[base.key]?.name ?? base.name}
+                    currentVoice={draft[base.key]?.voice_id}
+                    currentPersonality={draft[base.key]?.personality ?? ""}
                     onChange={(name) => setName(base.key, name)}
+                    onVoiceChange={(v) => setVoice(base.key, v)}
+                    onPersonalityChange={(p) => setPersonality(base.key, p)}
                     index={i}
                   />
                 ))}
@@ -331,7 +359,11 @@ function CastRow({
   hue,
   signature,
   currentName,
+  currentVoice,
+  currentPersonality,
   onChange,
+  onVoiceChange,
+  onPersonalityChange,
   index,
 }: {
   agentKey: string
@@ -340,7 +372,11 @@ function CastRow({
   hue: number
   signature: string
   currentName: string
+  currentVoice: string | undefined
+  currentPersonality: string
   onChange: (name: string) => void
+  onVoiceChange: (voiceId: string | undefined) => void
+  onPersonalityChange: (personality: string) => void
   index: number
 }) {
   const { getPersona } = usePersonas()
@@ -429,6 +465,81 @@ function CastRow({
               <span>{signature}</span>
             </blockquote>
           )}
+
+          {/* Voice + personality */}
+          <div className="grid gap-3 pt-2 sm:grid-cols-[1fr_auto]">
+            <div className="space-y-1.5">
+              <Label
+                htmlFor={`voice-${agentKey}`}
+                className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground"
+              >
+                Voice
+              </Label>
+              <div className="flex gap-2">
+                <select
+                  id={`voice-${agentKey}`}
+                  value={currentVoice ?? ""}
+                  onChange={(e) =>
+                    onVoiceChange(e.target.value || undefined)
+                  }
+                  className="h-9 flex-1 rounded-md border border-input bg-background px-3 text-sm"
+                >
+                  <option value="">— No voice —</option>
+                  <optgroup label="Female">
+                    {AURA_VOICES.filter((v) => v.gender === "female").map(
+                      (v) => (
+                        <option key={v.id} value={v.id}>
+                          {v.label}
+                        </option>
+                      ),
+                    )}
+                  </optgroup>
+                  <optgroup label="Male">
+                    {AURA_VOICES.filter((v) => v.gender === "male").map((v) => (
+                      <option key={v.id} value={v.id}>
+                        {v.label}
+                      </option>
+                    ))}
+                  </optgroup>
+                </select>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="h-9 gap-1.5"
+                  disabled={!currentVoice}
+                  onClick={() => {
+                    if (!currentVoice) return
+                    void speak(
+                      `Hi, I'm ${currentName || defaultName}. ${signature}`,
+                      currentVoice,
+                    )
+                  }}
+                >
+                  <Volume2 className="size-3.5" />
+                  Sample
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label
+              htmlFor={`personality-${agentKey}`}
+              className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground"
+            >
+              Personality (optional — gets injected into chat system prompt)
+            </Label>
+            <textarea
+              id={`personality-${agentKey}`}
+              value={currentPersonality}
+              onChange={(e) => onPersonalityChange(e.target.value)}
+              placeholder={`e.g. "Speaks bluntly. Loves 18th-century financial history. Always cites a specific number first."`}
+              rows={2}
+              className="w-full resize-y rounded-md border border-input bg-background px-3 py-2 text-sm"
+              maxLength={500}
+            />
+          </div>
         </div>
       </div>
 

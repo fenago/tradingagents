@@ -5,7 +5,11 @@ import type { Database } from "@/types/database"
 
 export type Profile = Database["public"]["Tables"]["profiles"]["Row"]
 
-export type PersonaOverride = { name?: string }
+export type PersonaOverride = {
+  name?: string
+  voice_id?: string
+  personality?: string
+}
 export type PersonaOverrides = Record<string, PersonaOverride>
 
 export function useProfile() {
