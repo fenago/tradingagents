@@ -45,9 +45,16 @@ export function useCheckout() {
     }
     const t = toast.loading("Opening Stripe Checkout…")
     try {
+      const origin = window.location.origin
       const { data, error } = await supabase.functions.invoke(
         "stripe-checkout",
-        { body: { price_id: priceId } },
+        {
+          body: {
+            price_id: priceId,
+            success_url: `${origin}/billing/success`,
+            cancel_url: `${origin}/pricing`,
+          },
+        },
       )
       if (error) throw error
       if (!data?.url) {

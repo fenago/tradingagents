@@ -36,6 +36,7 @@ import { TradeCTA } from "@/components/run/TradeCTA"
 import { FinancialText } from "@/components/run/FinancialText"
 import { RatingScale } from "@/components/run/RatingScale"
 import { PlainEnglishCard } from "@/components/run/PlainEnglishCard"
+import { TalkToDeskButton } from "@/components/run/TalkToDeskButton"
 import { stripMarkdown } from "@/lib/utils"
 import { InfoTip } from "@/components/ui/tooltip"
 import { sfx } from "@/lib/sfx"
@@ -484,6 +485,9 @@ export function RunRoute() {
           </div>
         </main>
       </div>
+
+      {/* Talk-to-the-Desk floating launcher + chat panel */}
+      <TalkToDeskButton runId={run.id} />
     </div>
   )
 }

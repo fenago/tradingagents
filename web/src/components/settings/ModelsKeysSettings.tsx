@@ -101,9 +101,9 @@ const PROVIDERS: ProviderMeta[] = [
   {
     provider: "ollama",
     blurb:
-      "Local models on your own machine. No key needed — paste any string. Worker must run locally to use this.",
-    whereToGetUrl: "https://ollama.com/download",
-    whereToGetLabel: "Ollama download",
+      "Ollama Cloud (paste your ollama.com API key) or a local Ollama install (any string works). Cloud gives you gpt-oss:120b and other open-weight models without managing GPUs.",
+    whereToGetUrl: "https://ollama.com/settings/keys",
+    whereToGetLabel: "Ollama Cloud keys",
     hue: 110,
   },
   {

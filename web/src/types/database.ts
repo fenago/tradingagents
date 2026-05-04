@@ -14,6 +14,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      agent_conversations: {
+        Row: {
+          agent_key: string
+          created_at: string
+          id: string
+          messages: Json
+          run_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          agent_key: string
+          created_at?: string
+          id?: string
+          messages?: Json
+          run_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          agent_key?: string
+          created_at?: string
+          id?: string
+          messages?: Json
+          run_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_conversations_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       api_keys_encrypted: {
         Row: {
           created_at: string
