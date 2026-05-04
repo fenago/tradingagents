@@ -237,10 +237,12 @@ def get_stockstats_indicator(
             curr_date,
         )
     except Exception as e:
-        print(
-            f"Error getting stockstats indicator data for indicator {indicator} on {curr_date}: {e}"
+        from tradingagents.dataflows.data_status import log_and_unavailable
+
+        return log_and_unavailable(
+            f"stockstats indicator '{indicator}' for {symbol} on {curr_date}",
+            e,
         )
-        return ""
 
     return str(indicator_value)
 

@@ -62,7 +62,26 @@ def invoke_structured_or_freetext(
     if structured_llm is not None:
         try:
             result = structured_llm.invoke(prompt)
-            return render(result)
+            # Validate the provider returned a parsed Pydantic instance, not
+            # a free-text string or a malformed dict. If it didn't, fall
+            # through to the free-text path with a clear log so silent
+            # degradation is detectable.
+            try:
+                from pydantic import BaseModel  # local import for clarity
+
+                if not isinstance(result, BaseModel):
+                    logger.warning(
+                        "%s: structured-output returned non-Pydantic %r; "
+                        "falling back to free text",
+                        agent_name, type(result).__name__,
+                    )
+                else:
+                    return render(result)
+            except Exception as ve:  # noqa: BLE001
+                logger.warning(
+                    "%s: post-invoke validation failed (%s); falling back to free text",
+                    agent_name, ve,
+                )
         except Exception as exc:
             logger.warning(
                 "%s: structured-output invocation failed (%s); retrying once as free text",

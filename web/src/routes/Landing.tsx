@@ -24,6 +24,8 @@ import { MeshGradient } from "@/components/landing/MeshGradient"
 import { TickerTape } from "@/components/landing/TickerTape"
 import { GlassTerminal } from "@/components/landing/GlassTerminal"
 import { Card3DTilt } from "@/components/landing/Card3DTilt"
+import { TradingShowcase } from "@/components/landing/TradingShowcase"
+import { SectionAmbient } from "@/components/landing/SectionAmbient"
 import { PERSONAS } from "@/lib/agent_personas"
 import { useAuth } from "@/hooks/useAuth"
 import { useCheckout } from "@/hooks/useCheckout"
@@ -45,6 +47,7 @@ export function LandingRoute() {
       <Hero />
       <DeskShowcase />
       <Pipeline />
+      <TradingShowcase />
       <CastShowcase />
       <Pricing />
       <Trust />
@@ -450,8 +453,9 @@ function DeskShowcase() {
 
 function Pipeline() {
   return (
-    <section className="py-24">
-      <div className="mx-auto max-w-7xl px-6">
+    <section className="relative isolate overflow-hidden py-24">
+      <SectionAmbient hue1={250} hue2={30} intensity={0.7} />
+      <div className="relative mx-auto max-w-7xl px-6">
         <div className="mx-auto max-w-3xl text-center">
           <span className="label-eyebrow">Workflow</span>
           <h2 className="font-display mt-3 text-balance text-4xl leading-tight tracking-tight sm:text-5xl">
@@ -833,8 +837,9 @@ function Trust() {
   ]
 
   return (
-    <section className="border-y border-border bg-card/40 py-24">
-      <div className="mx-auto max-w-7xl px-6">
+    <section className="relative isolate overflow-hidden border-y border-border bg-card/40 py-24">
+      <SectionAmbient hue1={145} hue2={265} intensity={0.6} />
+      <div className="relative mx-auto max-w-7xl px-6">
         <div className="mx-auto max-w-3xl text-center">
           <span className="label-eyebrow">The regulatory safe-zone</span>
           <h2 className="font-display mt-3 text-balance text-4xl leading-tight tracking-tight sm:text-5xl">
@@ -856,13 +861,20 @@ function Trust() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.2 }}
                 transition={{ duration: 0.4, delay: i * 0.08 }}
-                className="rounded-xl border border-border bg-card p-5"
+                whileHover={{ y: -4, transition: { duration: 0.15 } }}
+                className="group relative overflow-hidden rounded-xl border border-border bg-card p-5 transition-shadow hover:shadow-lg"
               >
-                <div className="mb-3 grid size-9 place-items-center rounded-md bg-primary/10 text-primary">
+                <span
+                  className="pointer-events-none absolute -right-12 -top-12 size-32 rounded-full bg-primary/5 opacity-0 blur-2xl transition-opacity group-hover:opacity-100"
+                  aria-hidden
+                />
+                <div className="relative mb-3 grid size-9 place-items-center rounded-md bg-primary/10 text-primary transition-transform group-hover:scale-110">
                   <Icon className="size-4" />
                 </div>
-                <h3 className="font-semibold">{c.title}</h3>
-                <p className="mt-2 text-sm text-muted-foreground">{c.body}</p>
+                <h3 className="relative font-semibold">{c.title}</h3>
+                <p className="relative mt-2 text-sm text-muted-foreground">
+                  {c.body}
+                </p>
               </motion.div>
             )
           })}
