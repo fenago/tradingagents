@@ -283,13 +283,13 @@ export function RunRoute() {
         {/* Main */}
         <main className="col-span-12 space-y-6 lg:col-span-8">
           {/* Plain-English explainer — for users who don't speak hedge fund */}
-          {run.verdict && (
-            <PlainEnglishCard
-              ticker={run.ticker}
-              verdict={run.verdict}
-              memoMarkdown={reportMap.get("final_trade_decision")}
-            />
-          )}
+          <PlainEnglishCard
+            ticker={run.ticker}
+            verdict={run.verdict}
+            memoMarkdown={reportMap.get("final_trade_decision")}
+            runStatus={run.status}
+          />
+
 
           {/* Pipeline diagram — always visible, shows the flow + playhead */}
           <RunPipelineDiagram

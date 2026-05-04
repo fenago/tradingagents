@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { useEffect, useMemo, useState } from "react"
+import { useNavigate, useSearchParams } from "react-router-dom"
 import { motion } from "framer-motion"
 import { ArrowRight, Calendar, Sparkles } from "lucide-react"
 import { toast } from "sonner"
@@ -20,9 +20,17 @@ export function NewRunRoute() {
   const navigate = useNavigate()
 
   const today = useMemo(() => new Date().toISOString().slice(0, 10), [])
-  const [ticker, setTicker] = useState("")
+  const [searchParams] = useSearchParams()
+  const [ticker, setTicker] = useState(
+    () => (searchParams.get("ticker") ?? "").toUpperCase(),
+  )
   const [tradeDate, setTradeDate] = useState(today)
   const [submitting, setSubmitting] = useState(false)
+
+  useEffect(() => {
+    const q = searchParams.get("ticker")
+    if (q) setTicker(q.toUpperCase())
+  }, [searchParams])
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
