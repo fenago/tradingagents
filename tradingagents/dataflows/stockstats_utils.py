@@ -53,7 +53,10 @@ def load_ohlcv(symbol: str, curr_date: str) -> pd.DataFrame:
     filtered out so backtests never see future prices.
     """
     # Reject ticker values that would escape the cache directory when
-    # interpolated into the cache filename (e.g. ``../../tmp/x``).
+    # interpolated into the cache filename (e.g. ``../../tmp/x``). Also
+    # uppercase once at entry so "nvda" and "NVDA" share a single cache
+    # path instead of diverging into two files.
+    symbol = symbol.upper()
     safe_symbol = safe_ticker_component(symbol)
 
     config = get_config()
