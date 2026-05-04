@@ -1,11 +1,15 @@
 import { useEffect, useMemo, useState } from "react"
 import { motion } from "framer-motion"
 import {
+  Bell,
   Check,
+  CreditCard,
   KeyRound,
+  Monitor,
   Quote,
   RotateCcw,
   Save,
+  ShieldCheck,
   Sparkles,
   Users,
   Wallet,
@@ -22,6 +26,10 @@ import { BrokerageSettings } from "@/components/settings/BrokerageSettings"
 import { RunDefaultsSettings } from "@/components/settings/RunDefaultsSettings"
 import { AccountSettings } from "@/components/settings/AccountSettings"
 import { ModelsKeysSettings } from "@/components/settings/ModelsKeysSettings"
+import { NotificationsSettings } from "@/components/settings/NotificationsSettings"
+import { PrivacySettings } from "@/components/settings/PrivacySettings"
+import { BillingSettings } from "@/components/settings/BillingSettings"
+import { DisplaySettings } from "@/components/settings/DisplaySettings"
 import { PERSONAS, type Persona } from "@/lib/agent_personas"
 import { PHASES } from "@/hooks/useDirector"
 import { usePersonas } from "@/hooks/usePersonas"
@@ -95,6 +103,22 @@ export function SettingsRoute() {
             <Sparkles className="size-3.5" />
             Run Defaults
           </TabsTrigger>
+          <TabsTrigger value="notifications" className="gap-2">
+            <Bell className="size-3.5" />
+            Notifications
+          </TabsTrigger>
+          <TabsTrigger value="billing" className="gap-2">
+            <CreditCard className="size-3.5" />
+            Billing
+          </TabsTrigger>
+          <TabsTrigger value="display" className="gap-2">
+            <Monitor className="size-3.5" />
+            Display
+          </TabsTrigger>
+          <TabsTrigger value="privacy" className="gap-2">
+            <ShieldCheck className="size-3.5" />
+            Privacy
+          </TabsTrigger>
           <TabsTrigger value="account">Account</TabsTrigger>
         </TabsList>
 
@@ -112,6 +136,22 @@ export function SettingsRoute() {
 
         <TabsContent value="defaults" className="mt-6">
           <RunDefaultsSettings />
+        </TabsContent>
+
+        <TabsContent value="notifications" className="mt-6">
+          <NotificationsSettings />
+        </TabsContent>
+
+        <TabsContent value="billing" className="mt-6">
+          <BillingSettings />
+        </TabsContent>
+
+        <TabsContent value="display" className="mt-6">
+          <DisplaySettings />
+        </TabsContent>
+
+        <TabsContent value="privacy" className="mt-6">
+          <PrivacySettings />
         </TabsContent>
 
         <TabsContent value="account" className="mt-6">

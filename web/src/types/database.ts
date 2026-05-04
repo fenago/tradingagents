@@ -294,6 +294,7 @@ export type Database = {
           id: string
           is_admin: boolean
           persona_overrides: Json
+          preferences: Json
           run_defaults: Json
           stripe_customer_id: string | null
           tier: Database["public"]["Enums"]["tier"]
@@ -308,6 +309,7 @@ export type Database = {
           id: string
           is_admin?: boolean
           persona_overrides?: Json
+          preferences?: Json
           run_defaults?: Json
           stripe_customer_id?: string | null
           tier?: Database["public"]["Enums"]["tier"]
@@ -322,6 +324,7 @@ export type Database = {
           id?: string
           is_admin?: boolean
           persona_overrides?: Json
+          preferences?: Json
           run_defaults?: Json
           stripe_customer_id?: string | null
           tier?: Database["public"]["Enums"]["tier"]
