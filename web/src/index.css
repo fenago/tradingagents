@@ -46,7 +46,8 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
   --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-mono: ui-monospace, "JetBrains Mono", Consolas, monospace;
+  --font-mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+  --font-display: "DM Serif Display", "Inter", Georgia, serif;
 }
 
 :root {
@@ -92,45 +93,58 @@
   --sell: oklch(0.6 0.22 25);
 }
 
+/*
+ * "Night Ops" War Room palette — TickerInsight brand identity for the Sovereign
+ * Investor / Director David ICP. Deep navy bedrock, cyan signal, emerald growth,
+ * rose risk. Institutional, clinical, evidence-first.
+ */
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  /* Surfaces */
+  --background: #020617;          /* Deepest blue — War Room canvas */
+  --foreground: #f8fafc;
+  --card: #0f172a;                /* Deep navy — agent dossiers */
+  --card-foreground: #f8fafc;
+  --popover: #0f172a;
+  --popover-foreground: #f8fafc;
+  --secondary: #1e293b;           /* Slate */
+  --secondary-foreground: #f8fafc;
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
+  --accent: #1e293b;
+  --accent-foreground: #f8fafc;
+  --border: rgba(148, 163, 184, 0.12);
+  --input: rgba(148, 163, 184, 0.18);
 
-  --buy: oklch(0.7 0.2 145);
-  --overweight: oklch(0.72 0.14 155);
-  --hold: oklch(0.72 0.02 250);
-  --underweight: oklch(0.72 0.14 35);
-  --sell: oklch(0.65 0.24 25);
+  /* Signals */
+  --primary: #06b6d4;             /* Cyan — the "Aha" highlight */
+  --primary-foreground: #020617;
+  --ring: #06b6d4;
+  --destructive: #ef4444;
+  --destructive-foreground: #f8fafc;
+
+  /* Charts */
+  --chart-1: #06b6d4;             /* cyan */
+  --chart-2: #10b981;             /* emerald */
+  --chart-3: #f43f5e;             /* rose */
+  --chart-4: #f59e0b;             /* amber */
+  --chart-5: #3b82f6;             /* info blue */
+
+  /* Sidebar */
+  --sidebar: #0b1322;
+  --sidebar-foreground: #f8fafc;
+  --sidebar-primary: #06b6d4;
+  --sidebar-primary-foreground: #020617;
+  --sidebar-accent: #1e293b;
+  --sidebar-accent-foreground: #f8fafc;
+  --sidebar-border: rgba(148, 163, 184, 0.08);
+  --sidebar-ring: #06b6d4;
+
+  /* Verdict scale — adversarial debate colors */
+  --buy: #10b981;                 /* Emerald — bullish growth */
+  --overweight: #14b8a6;
+  --hold: #64748b;                /* Slate — neutral */
+  --underweight: #fb923c;
+  --sell: #f43f5e;                /* Rose — bearish risk */
 }
 
 @layer base {
@@ -139,9 +153,28 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
-    font-feature-settings: "rlig" 1, "calt" 1, "ss01" 1;
+    font-feature-settings: "rlig" 1, "calt" 1, "ss01" 1, "tnum" 1;
   }
   html {
     color-scheme: light dark;
+  }
+
+  /* Display headings use DM Serif Display — Wall-Street-Journal authority. */
+  .font-display,
+  h1.display,
+  h2.display {
+    font-family: var(--font-display);
+    font-weight: 400;
+    letter-spacing: -0.02em;
+  }
+
+  /* Section labels — small caps for institutional feel */
+  .label-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
   }
 }

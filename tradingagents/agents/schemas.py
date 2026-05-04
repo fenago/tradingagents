@@ -186,14 +186,45 @@ class PortfolioDecision(BaseModel):
     executive_summary: str = Field(
         description=(
             "A concise action plan covering entry strategy, position sizing, "
-            "key risk levels, and time horizon. Two to four sentences."
+            "key risk levels, and time horizon. Two to four sentences. "
+            "Use markdown formatting (bold key numbers, bullets where helpful)."
+        ),
+    )
+    plain_english_tldr: str = Field(
+        description=(
+            "A robust plain-English briefing — written for someone who wants to "
+            "talk about this analysis with friends and sound like they know what "
+            "they're discussing. Roughly 120-180 words. NO jargon ('overweight', "
+            "'PEG', 'CUDA moat', 'reflexivity'); every term gets translated to "
+            "everyday language. Use markdown structure with these EXACT sections "
+            "and bold headers:\n\n"
+            "**The call in plain English:** one sentence translating the rating "
+            "into what an everyday investor would do.\n\n"
+            "**Why we like it (or don't):** 2-3 specific bullet points pulled "
+            "from the analysts' actual findings. Reference real numbers and "
+            "concrete events when present (e.g. 'revenue grew 17% last quarter', "
+            "'Q2 earnings hit May 22'), but explain what they mean. NEVER use "
+            "raw jargon — say 'they're printing cash' instead of 'FCF margin "
+            "is 59%'.\n\n"
+            "**What could go wrong:** 1-2 specific risks the bear team raised, "
+            "in plain words.\n\n"
+            "**If you act on this:** 2-3 concrete tactical bullets — sizing, "
+            "timing, what to watch. Speak like you're explaining to a friend "
+            "at a bar.\n\n"
+            "Tone: confident but humble. The reader should feel they could "
+            "explain the call to a non-investor friend after reading just this "
+            "section. Don't reference 'the analysts' or 'the desk' as a third "
+            "party — speak as the desk's voice."
         ),
     )
     investment_thesis: str = Field(
         description=(
             "Detailed reasoning anchored in specific evidence from the analysts' "
-            "debate. If prior lessons are referenced in the prompt context, "
-            "incorporate them; otherwise rely solely on the current analysis."
+            "debate. Use markdown formatting: bold key claims, use bullet points "
+            "for distinct supporting arguments, and add ## subheadings for major "
+            "sections (e.g. 'The Bull Case', 'The Bear Case', 'Why we land here'). "
+            "If prior lessons are referenced in the prompt context, incorporate them; "
+            "otherwise rely solely on the current analysis."
         ),
     )
     price_target: Optional[float] = Field(
@@ -217,9 +248,17 @@ def render_pm_decision(decision: PortfolioDecision) -> str:
     parts = [
         f"**Rating**: {decision.rating.value}",
         "",
-        f"**Executive Summary**: {decision.executive_summary}",
+        "## Executive Summary",
         "",
-        f"**Investment Thesis**: {decision.investment_thesis}",
+        decision.executive_summary,
+        "",
+        "## TL;DR — in plain English",
+        "",
+        decision.plain_english_tldr,
+        "",
+        "## Investment Thesis",
+        "",
+        decision.investment_thesis,
     ]
     if decision.price_target is not None:
         parts.extend(["", f"**Price Target**: {decision.price_target}"])

@@ -269,14 +269,27 @@ export function useDirector(
     setIsPlaying(true)
   }
 
-  // Reset when events change (new run)
+  // Reset when events change (new run).
+  // If autoStart is false (default for completed runs), jump straight to the
+  // last frame so the user sees the final state — they hit "Replay" to watch
+  // the choreography. If autoStart is true, start at the beginning and play.
   useEffect(() => {
     if (isLive) return
     startedAtRef.current = null
-    setFrameIdx(0)
-    setElapsedMs(0)
-    setIsPlaying(autoStart && script.length > 0)
-  }, [script, isLive, autoStart])
+    if (autoStart && script.length > 0) {
+      setFrameIdx(0)
+      setElapsedMs(0)
+      setIsPlaying(true)
+    } else if (script.length > 0) {
+      setFrameIdx(script.length - 1)
+      setElapsedMs(totalMs)
+      setIsPlaying(false)
+    } else {
+      setFrameIdx(0)
+      setElapsedMs(0)
+      setIsPlaying(false)
+    }
+  }, [script, isLive, autoStart, totalMs])
 
   useEffect(() => {
     if (isLive) return
@@ -333,6 +346,25 @@ export function useDirector(
         }
       } else {
         spotlight = { kind: "thinking", agentKey: running.key }
+      }
+    } else {
+      // No agents running yet but the run is live → show a "warming" state
+      // so users aren't staring at "the desk is quiet" while the worker boots
+      // the graph and fetches market data (~30-90s before the first agent).
+      const hasAnyAgentEvents = events.some(
+        (e) =>
+          e.event_type === "agent_started" ||
+          e.event_type === "agent_message" ||
+          e.event_type === "agent_completed",
+      )
+      const hasRunStarted = events.some(
+        (e) => e.event_type === "run_started",
+      )
+      if (!hasAnyAgentEvents) {
+        spotlight = {
+          kind: "warming",
+          phase: hasRunStarted ? "starting" : "queued",
+        }
       }
     }
     const debate: DebateMessage[] = events

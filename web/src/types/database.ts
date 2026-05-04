@@ -7,6 +7,8 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
@@ -34,6 +36,51 @@ export type Database = {
           created_at?: string
           hint?: string
           provider?: Database["public"]["Enums"]["llm_provider"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      brokerage_credentials: {
+        Row: {
+          account_id: string | null
+          account_status: string | null
+          broker: Database["public"]["Enums"]["brokerage"]
+          buying_power: number | null
+          cash: number | null
+          connected_at: string
+          key_id_hint: string
+          key_id_secret_id: string
+          paper_mode: boolean
+          secret_key_secret_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_id?: string | null
+          account_status?: string | null
+          broker?: Database["public"]["Enums"]["brokerage"]
+          buying_power?: number | null
+          cash?: number | null
+          connected_at?: string
+          key_id_hint: string
+          key_id_secret_id: string
+          paper_mode?: boolean
+          secret_key_secret_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_id?: string | null
+          account_status?: string | null
+          broker?: Database["public"]["Enums"]["brokerage"]
+          buying_power?: number | null
+          cash?: number | null
+          connected_at?: string
+          key_id_hint?: string
+          key_id_secret_id?: string
+          paper_mode?: boolean
+          secret_key_secret_id?: string
           updated_at?: string
           user_id?: string
         }
@@ -88,6 +135,77 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "memory_log_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          broker: Database["public"]["Enums"]["brokerage"]
+          broker_order_id: string | null
+          created_at: string
+          filled_avg_price: number | null
+          filled_qty: number | null
+          id: string
+          limit_price: number | null
+          order_type: string
+          paper_mode: boolean
+          qty: number
+          raw_response: Json | null
+          run_id: string | null
+          side: string
+          status: string
+          ticker: string
+          time_in_force: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          broker?: Database["public"]["Enums"]["brokerage"]
+          broker_order_id?: string | null
+          created_at?: string
+          filled_avg_price?: number | null
+          filled_qty?: number | null
+          id?: string
+          limit_price?: number | null
+          order_type?: string
+          paper_mode?: boolean
+          qty: number
+          raw_response?: Json | null
+          run_id?: string | null
+          side: string
+          status?: string
+          ticker: string
+          time_in_force?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          broker?: Database["public"]["Enums"]["brokerage"]
+          broker_order_id?: string | null
+          created_at?: string
+          filled_avg_price?: number | null
+          filled_qty?: number | null
+          id?: string
+          limit_price?: number | null
+          order_type?: string
+          paper_mode?: boolean
+          qty?: number
+          raw_response?: Json | null
+          run_id?: string | null
+          side?: string
+          status?: string
+          ticker?: string
+          time_in_force?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_run_id_fkey"
             columns: ["run_id"]
             isOneToOne: false
             referencedRelation: "runs"
@@ -425,11 +543,30 @@ export type Database = {
           updated_at: string | null
           user_id: string | null
         }
+        Insert: {
+          created_at?: string | null
+          hint?: string | null
+          provider?: Database["public"]["Enums"]["llm_provider"] | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          hint?: string | null
+          provider?: Database["public"]["Enums"]["llm_provider"] | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
         Relationships: []
       }
     }
-    Functions: { [_ in never]: never }
+    Functions: {
+      vault_create_secret: { Args: { secret: string }; Returns: string }
+      vault_delete_secret: { Args: { secret_id: string }; Returns: undefined }
+      vault_get_secret: { Args: { secret_id: string }; Returns: string }
+    }
     Enums: {
+      brokerage: "alpaca"
       llm_provider:
         | "openai"
         | "anthropic"
@@ -442,10 +579,153 @@ export type Database = {
         | "ollama"
         | "azure"
       run_status: "queued" | "running" | "completed" | "failed" | "cancelled"
-      tier: "free" | "pro" | "trader" | "enterprise"
+      tier: "free" | "pro" | "trader" | "enterprise" | "researcher" | "director"
       trader_action: "buy" | "hold" | "sell"
       verdict: "buy" | "overweight" | "hold" | "underweight" | "sell"
     }
-    CompositeTypes: { [_ in never]: never }
+    CompositeTypes: {
+      [_ in never]: never
+    }
   }
 }
+
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {
+      brokerage: ["alpaca"],
+      llm_provider: [
+        "openai",
+        "anthropic",
+        "google",
+        "xai",
+        "deepseek",
+        "qwen",
+        "glm",
+        "openrouter",
+        "ollama",
+        "azure",
+      ],
+      run_status: ["queued", "running", "completed", "failed", "cancelled"],
+      tier: ["free", "pro", "trader", "enterprise", "researcher", "director"],
+      trader_action: ["buy", "hold", "sell"],
+      verdict: ["buy", "overweight", "hold", "underweight", "sell"],
+    },
+  },
+} as const

@@ -222,3 +222,6 @@ __marimo__/
 web/node_modules/
 web/dist/
 web/.env.local
+
+# Local Netlify folder
+.netlify

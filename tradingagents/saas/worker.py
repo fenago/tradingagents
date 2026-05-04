@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 import signal
 import sys
 import threading
@@ -233,17 +234,39 @@ def run_one(client: Client, run: Dict[str, Any]) -> None:
         hb_thread.join(timeout=2)
 
 
+_MD_BOLD_RE = re.compile(r"\*\*([^*]+)\*\*")
+_MD_ITAL_RE = re.compile(r"(?<!\*)\*([^*]+)\*(?!\*)")
+_MD_CODE_RE = re.compile(r"`([^`]+)`")
+_MD_LINK_RE = re.compile(r"\[([^\]]+)\]\([^)]+\)")
+_MD_HEADER_RE = re.compile(r"^\s*#{1,6}\s*", re.MULTILINE)
+
+
+def _strip_markdown(text: str) -> str:
+    """Best-effort markdown → plain text for header/preview display."""
+    if not text:
+        return ""
+    text = _MD_LINK_RE.sub(r"\1", text)
+    text = _MD_BOLD_RE.sub(r"\1", text)
+    text = _MD_ITAL_RE.sub(r"\1", text)
+    text = _MD_CODE_RE.sub(r"\1", text)
+    text = _MD_HEADER_RE.sub("", text)
+    text = text.replace("---", " ").replace("___", " ")
+    return text
+
+
 def _first_sentence(text: str, max_chars: int = 220) -> Optional[str]:
     if not text:
         return None
-    cleaned = " ".join(text.strip().split())
-    # Skip leading markdown headers
-    while cleaned.startswith("#"):
-        idx = cleaned.find("\n")
-        if idx < 0:
-            cleaned = cleaned.lstrip("#").strip()
+    # Strip markdown first so we don't display raw ** and # in the UI header.
+    cleaned = " ".join(_strip_markdown(text).strip().split())
+    # Drop the rating prefix the PM template always leads with.
+    # e.g. "Rating: Overweight Executive Summary: ..." -> "Initiate AAPL ..."
+    lower = cleaned.lower()
+    for marker in ("executive summary:", "summary:", "tl;dr:", "tldr:"):
+        idx = lower.find(marker)
+        if idx >= 0:
+            cleaned = cleaned[idx + len(marker) :].strip(" :")
             break
-        cleaned = cleaned[idx + 1 :].strip()
     for delim in (". ", "! ", "? "):
         idx = cleaned.find(delim)
         if 0 < idx < max_chars:

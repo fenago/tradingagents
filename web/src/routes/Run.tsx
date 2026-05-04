@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { Link, useParams } from "react-router-dom"
 import { AnimatePresence, motion } from "framer-motion"
 import {
@@ -32,12 +32,18 @@ import { ReportMarkdown } from "@/components/run/ReportMarkdown"
 import { CostTicker } from "@/components/run/CostTicker"
 import { AgentAvatar } from "@/components/run/AgentAvatar"
 import { RunPipelineDiagram } from "@/components/run/RunPipelineDiagram"
+import { TradeCTA } from "@/components/run/TradeCTA"
+import { FinancialText } from "@/components/run/FinancialText"
+import { RatingScale } from "@/components/run/RatingScale"
+import { PlainEnglishCard } from "@/components/run/PlainEnglishCard"
+import { stripMarkdown } from "@/lib/utils"
+import { sfx } from "@/lib/sfx"
 import { usePersonas } from "@/hooks/usePersonas"
 import { PERSONAS } from "@/lib/agent_personas"
 
 const REPORT_SECTIONS = [
   { key: "market_report", label: "Market", agentKey: "Market Analyst" },
-  { key: "sentiment_report", label: "Social", agentKey: "Social Analyst" },
+  { key: "sentiment_report", label: "Sentiment", agentKey: "Social Analyst" },
   { key: "news_report", label: "News", agentKey: "News Analyst" },
   {
     key: "fundamentals_report",
@@ -74,9 +80,11 @@ export function RunRoute() {
   const isLive =
     data?.run.status === "queued" || data?.run.status === "running"
 
+  // Default to NOT autoplaying — page loads at the end of the run, user
+  // hits the Replay button to watch the choreography from the start.
   const director = useDirector(data?.events ?? [], {
     isLive: !!isLive,
-    autoStart: true,
+    autoStart: false,
   })
 
   // Build the agent timeline from director's agentStates
@@ -120,6 +128,46 @@ export function RunRoute() {
   useEffect(() => {
     setSelectedAgentKey(null)
   }, [data?.run.id])
+
+  // SFX: ding when an agent completes, whoosh when phase changes,
+  // chord when verdict lands. Refs prevent double-firing.
+  const lastDoneCountRef = useRef(0)
+  const lastPhaseRef = useRef<string | null>(null)
+  const lastStatusRef = useRef<string | null>(null)
+  useEffect(() => {
+    if (!data) return
+    const doneCount = Object.values(director.agentStates).filter(
+      (s) => s === "done",
+    ).length
+    if (doneCount > lastDoneCountRef.current && lastDoneCountRef.current > 0) {
+      sfx.play("agent_complete")
+    }
+    lastDoneCountRef.current = doneCount
+
+    if (
+      director.phaseGroup &&
+      director.phaseGroup !== lastPhaseRef.current &&
+      lastPhaseRef.current !== null
+    ) {
+      sfx.play("phase_change")
+    }
+    lastPhaseRef.current = director.phaseGroup
+
+    if (
+      data.run.status === "completed" &&
+      lastStatusRef.current &&
+      lastStatusRef.current !== "completed"
+    ) {
+      const v = data.run.verdict
+      if (v === "buy" || v === "overweight") sfx.play("verdict_buy")
+      else if (v === "sell" || v === "underweight") sfx.play("verdict_sell")
+      else sfx.play("verdict")
+    }
+    if (data.run.status === "failed" && lastStatusRef.current !== "failed") {
+      sfx.play("error")
+    }
+    lastStatusRef.current = data.run.status
+  }, [data, director.agentStates, director.phaseGroup])
 
   if (isLoading) return <RunSkeleton />
   if (!data) return <RunNotFound />
@@ -182,10 +230,24 @@ export function RunRoute() {
               initial={{ opacity: 0, y: 4 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="mt-3 max-w-3xl text-sm text-muted-foreground"
+              className="mt-3 max-w-3xl text-sm leading-relaxed text-muted-foreground"
             >
-              {run.one_liner}
+              <FinancialText ticker={run.ticker}>
+                {stripMarkdown(run.one_liner)}
+              </FinancialText>
             </motion.p>
+          )}
+
+          {/* 5-tier rating scale — visible spectrum + active highlighted */}
+          {run.verdict && (
+            <motion.div
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.25 }}
+              className="mt-3 max-w-md"
+            >
+              <RatingScale active={run.verdict} variant="compact" />
+            </motion.div>
           )}
           <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground/70">
             AI-generated analyst research. Not personalized investment advice.
@@ -220,6 +282,15 @@ export function RunRoute() {
 
         {/* Main */}
         <main className="col-span-12 space-y-6 lg:col-span-8">
+          {/* Plain-English explainer — for users who don't speak hedge fund */}
+          {run.verdict && (
+            <PlainEnglishCard
+              ticker={run.ticker}
+              verdict={run.verdict}
+              memoMarkdown={reportMap.get("final_trade_decision")}
+            />
+          )}
+
           {/* Pipeline diagram — always visible, shows the flow + playhead */}
           <RunPipelineDiagram
             agentStates={director.agentStates}
@@ -262,7 +333,13 @@ export function RunRoute() {
           {/* Spotlight — outer wrapper remounts only when agent changes */}
           <AnimatePresence mode="wait">
             <motion.div
-              key={spotlight.kind === "idle" ? "idle" : spotlight.agentKey}
+              key={
+                spotlight.kind === "idle"
+                  ? "idle"
+                  : spotlight.kind === "warming"
+                    ? "warming"
+                    : spotlight.agentKey
+              }
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -4 }}
@@ -277,7 +354,9 @@ export function RunRoute() {
             <ParallelStrip
               keys={director.phaseRunningKeys}
               currentKey={
-                spotlight.kind !== "idle" ? spotlight.agentKey : undefined
+                spotlight.kind === "thinking" || spotlight.kind === "spoke"
+                  ? spotlight.agentKey
+                  : undefined
               }
             />
           )}
@@ -368,6 +447,9 @@ export function RunRoute() {
               </TabsContent>
             </Tabs>
           </div>
+
+          {/* Trade CTA — separate panel for compliance */}
+          <TradeCTA run={run} />
 
           <Separator />
 

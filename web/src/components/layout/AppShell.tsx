@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { Outlet, NavLink } from "react-router-dom"
 import { motion } from "framer-motion"
 import {
+  Briefcase,
   LayoutDashboard,
   LogOut,
   Search,
@@ -18,11 +19,12 @@ import { cn } from "@/lib/utils"
 import { useTheme } from "@/lib/theme"
 import { useAuth } from "@/hooks/useAuth"
 import { Button } from "@/components/ui/button"
-import { getAmbient } from "@/lib/ambient"
+import { sfx } from "@/lib/sfx"
 
 const navItems = [
-  { to: "/", label: "Dashboard", icon: LayoutDashboard, hue: 250 },
+  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, hue: 250 },
   { to: "/runs/new", label: "New Analysis", icon: Search, hue: 200 },
+  { to: "/portfolio", label: "Portfolio", icon: Briefcase, hue: 175 },
   { to: "/watchlist", label: "Watchlist", icon: Star, hue: 50 },
   { to: "/track-record", label: "Track Record", icon: TrendingUp, hue: 145 },
   { to: "/settings", label: "Settings", icon: Settings, hue: 280 },
@@ -32,14 +34,7 @@ export function AppShell() {
   const { theme, setTheme } = useTheme()
   const { user, signOut } = useAuth()
   const initial = (user?.email ?? "?").trim().charAt(0).toUpperCase()
-  const [ambientOn, setAmbientOn] = useState(false)
-
-  useEffect(() => {
-    const a = getAmbient()
-    if (ambientOn) void a.start()
-    else a.stop()
-    return () => a.stop()
-  }, [ambientOn])
+  const [sfxOn, setSfxOn] = useState(() => sfx.isEnabled())
 
   return (
     <div className="grid h-screen grid-cols-[260px_1fr] bg-background">
@@ -147,20 +142,27 @@ export function AppShell() {
             variant="ghost"
             size="sm"
             className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground"
-            onClick={() => setAmbientOn((v) => !v)}
+            onClick={() => {
+              const next = !sfxOn
+              sfx.setEnabled(next)
+              setSfxOn(next)
+            }}
             title={
-              ambientOn
-                ? "Turn off the trading-floor ambience"
-                : "Turn on the trading-floor ambience"
+              sfxOn
+                ? "Turn off UI sound effects"
+                : "Turn on UI sound effects"
             }
           >
-            {ambientOn ? (
-              <Volume2 className="size-4" style={{ color: "oklch(0.7 0.18 145)" }} />
+            {sfxOn ? (
+              <Volume2
+                className="size-4"
+                style={{ color: "oklch(0.7 0.18 145)" }}
+              />
             ) : (
               <VolumeX className="size-4" />
             )}
-            <span>{ambientOn ? "Floor sound on" : "Floor sound off"}</span>
-            {ambientOn && (
+            <span>{sfxOn ? "Sound effects on" : "Sound effects off"}</span>
+            {sfxOn && (
               <motion.span
                 className="ml-auto inline-block size-1.5 rounded-full"
                 style={{ background: "oklch(0.7 0.18 145)" }}

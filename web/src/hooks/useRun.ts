@@ -38,6 +38,15 @@ export function useRun(id: string | undefined) {
     queryKey: ["run", id],
     queryFn: () => (id ? fetchRun(id) : Promise.resolve(null)),
     enabled: !!id,
+    // Polling fallback while the run is live, in case Realtime doesn't fire
+    // (RLS-Realtime handshake can be flaky on first connect). Stops once the
+    // run reaches a terminal state.
+    refetchInterval: (q) => {
+      const data = q.state.data as FullRun | null | undefined
+      if (!data) return 4000
+      const s = data.run.status
+      return s === "queued" || s === "running" ? 3000 : false
+    },
   })
 
   useEffect(() => {
@@ -56,7 +65,10 @@ export function useRun(id: string | undefined) {
         (payload) => {
           qc.setQueryData<FullRun | null>(["run", id], (old) => {
             if (!old) return old
-            return { ...old, events: [...old.events, payload.new as RunEvent] }
+            // Dedupe by id in case polling already fetched this event.
+            const incoming = payload.new as RunEvent
+            if (old.events.some((e) => e.id === incoming.id)) return old
+            return { ...old, events: [...old.events, incoming] }
           })
         },
       )
@@ -75,7 +87,11 @@ export function useRun(id: string | undefined) {
           })
         },
       )
-      .subscribe()
+      .subscribe((status, err) => {
+        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+          console.warn(`[useRun] Realtime channel ${status}`, err)
+        }
+      })
 
     return () => {
       supabase.removeChannel(channel)

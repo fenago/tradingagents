@@ -1,8 +1,10 @@
+import { useEffect } from "react"
 import { Link } from "react-router-dom"
 import { motion } from "framer-motion"
 import { ArrowRight, Calendar, Loader2, Plus, Sparkles } from "lucide-react"
 import { useRunsList } from "@/hooks/useRun"
 import { useAuth } from "@/hooks/useAuth"
+import { useCheckout } from "@/hooks/useCheckout"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Badge } from "@/components/ui/badge"
@@ -20,6 +22,14 @@ const VERDICT_HUE: Record<string, number> = {
 export function DashboardRoute() {
   const { user } = useAuth()
   const { data: runs, isLoading } = useRunsList()
+  const { consumePending } = useCheckout()
+
+  // If the user just logged in after clicking a pricing button, complete
+  // the Stripe checkout intent now that we have a session.
+  useEffect(() => {
+    void consumePending()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const greeting = user?.email?.split("@")[0] ?? "there"
 

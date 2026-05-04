@@ -5,12 +5,16 @@ import { ThemeProvider } from "@/lib/theme"
 import { AuthProvider } from "@/hooks/useAuth"
 import { AuthGate } from "@/components/auth/AuthGate"
 import { AppShell } from "@/components/layout/AppShell"
+import { LandingRoute } from "@/routes/Landing"
 import { DashboardRoute } from "@/routes/Dashboard"
 import { RunRoute } from "@/routes/Run"
 import { NewRunRoute } from "@/routes/NewRun"
 import { WatchlistRoute } from "@/routes/Watchlist"
 import { TrackRecordRoute } from "@/routes/TrackRecord"
+import { PortfolioRoute } from "@/routes/Portfolio"
 import { SettingsRoute } from "@/routes/Settings"
+import { PricingRoute } from "@/routes/Pricing"
+import { BillingSuccessRoute } from "@/routes/BillingSuccess"
 import { LoginRoute } from "@/routes/Login"
 import { AuthCallbackRoute } from "@/routes/AuthCallback"
 
@@ -27,8 +31,12 @@ export default function App() {
         <AuthProvider>
           <BrowserRouter>
             <Routes>
+              {/* Public routes */}
+              <Route path="/" element={<LandingRoute />} />
               <Route path="/login" element={<LoginRoute />} />
               <Route path="/auth/callback" element={<AuthCallbackRoute />} />
+
+              {/* Authenticated app */}
               <Route
                 element={
                   <AuthGate>
@@ -36,13 +44,16 @@ export default function App() {
                   </AuthGate>
                 }
               >
-                <Route path="/" element={<DashboardRoute />} />
+                <Route path="/dashboard" element={<DashboardRoute />} />
                 <Route path="/runs/new" element={<NewRunRoute />} />
                 <Route path="/runs/:id" element={<RunRoute />} />
                 <Route path="/watchlist" element={<WatchlistRoute />} />
                 <Route path="/track-record" element={<TrackRecordRoute />} />
+                <Route path="/portfolio" element={<PortfolioRoute />} />
+                <Route path="/pricing" element={<PricingRoute />} />
+                <Route path="/billing/success" element={<BillingSuccessRoute />} />
                 <Route path="/settings" element={<SettingsRoute />} />
-                <Route path="*" element={<Navigate to="/" replace />} />
+                <Route path="*" element={<Navigate to="/dashboard" replace />} />
               </Route>
             </Routes>
           </BrowserRouter>

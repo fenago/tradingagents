@@ -1,13 +1,15 @@
 import { AnimatePresence, motion } from "framer-motion"
-import { Quote } from "lucide-react"
+import { Quote, Sparkles } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { type Persona } from "@/lib/agent_personas"
+import { PERSONAS, type Persona } from "@/lib/agent_personas"
 import { usePersonas } from "@/hooks/usePersonas"
 import { AgentAvatar } from "@/components/run/AgentAvatar"
+import { ReportMarkdown } from "@/components/run/ReportMarkdown"
 import { useTypewriter } from "@/hooks/useTypewriter"
 
 export type SpotlightState =
   | { kind: "idle" }
+  | { kind: "warming"; phase?: "queued" | "starting" }
   | { kind: "thinking"; agentKey: string; thought?: string }
   | {
       kind: "spoke"
@@ -24,7 +26,7 @@ export function AgentSpotlight({ state }: { state: SpotlightState }) {
 
       <div className="relative px-8 py-10">
         <AnimatePresence mode="wait">
-          {state.kind === "idle" ? (
+          {state.kind === "idle" && (
             <motion.div
               key="idle"
               initial={{ opacity: 0 }}
@@ -40,7 +42,9 @@ export function AgentSpotlight({ state }: { state: SpotlightState }) {
                 Start an analysis to see the team work in real time.
               </p>
             </motion.div>
-          ) : (
+          )}
+          {state.kind === "warming" && <SpotlightWarming key="warming" phase={state.phase} />}
+          {(state.kind === "thinking" || state.kind === "spoke") && (
             <SpotlightActive
               key={state.agentKey + (state.kind === "spoke" ? ":spoke" : "")}
               state={state}
@@ -49,6 +53,63 @@ export function AgentSpotlight({ state }: { state: SpotlightState }) {
         </AnimatePresence>
       </div>
     </div>
+  )
+}
+
+function SpotlightWarming({ phase }: { phase?: "queued" | "starting" }) {
+  // Cycle a "spotlight" across the cast while the worker spins up.
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3 }}
+      className="flex flex-col items-center justify-center py-10 text-center"
+    >
+      <motion.div
+        animate={{ rotate: 360 }}
+        transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+        className="mb-5 grid size-14 place-items-center rounded-full bg-primary/10 text-primary shadow-[0_0_32px_oklch(0.6_0.2_265/0.4)]"
+      >
+        <Sparkles className="size-6" />
+      </motion.div>
+
+      <h3 className="text-xl font-semibold tracking-tight">
+        {phase === "queued" ? "Queued — waiting for the desk" : "Spinning up the desk…"}
+      </h3>
+      <p className="mt-1 max-w-md text-sm text-muted-foreground">
+        {phase === "queued"
+          ? "Your run is in the queue. As soon as a worker is free, the team gets to work."
+          : "Loading the analysts, fetching market data, and connecting to the model. The first take usually lands within ~60 seconds."}
+      </p>
+
+      {/* Cast preview — avatars cycle highlight */}
+      <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
+        {PERSONAS.map((p, i) => (
+          <motion.div
+            key={p.key}
+            animate={{ opacity: [0.3, 1, 0.3], scale: [1, 1.15, 1] }}
+            transition={{
+              duration: 2.4,
+              delay: (i * 2.4) / PERSONAS.length,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+          >
+            <AgentAvatar persona={p} size="xs" />
+          </motion.div>
+        ))}
+      </div>
+
+      <div className="mt-5 flex items-center gap-1.5 text-xs text-muted-foreground">
+        <motion.span
+          animate={{ opacity: [0.3, 1, 0.3] }}
+          transition={{ duration: 1.4, repeat: Infinity }}
+          className="size-1.5 rounded-full bg-primary"
+        />
+        <span>Connecting…</span>
+      </div>
+    </motion.div>
   )
 }
 
@@ -168,9 +229,11 @@ function ReasoningPanel({
         style={{ background: `oklch(0.72 0.16 ${persona.hue} / 0.6)` }}
         aria-hidden
       />
-      <div className="ml-2 whitespace-pre-wrap text-foreground/90">
-        {text}
-        {cursor && (
+      {cursor ? (
+        // Streaming: keep plain text + typewriter cursor.
+        // ReactMarkdown chokes on partial markdown, so wait until done to render.
+        <div className="ml-2 whitespace-pre-wrap text-foreground/90">
+          {text}
           <motion.span
             className="ml-0.5 inline-block h-[1em] w-[2px] translate-y-[3px] rounded-sm"
             style={{ background: `oklch(0.72 0.16 ${persona.hue})` }}
@@ -181,15 +244,22 @@ function ReasoningPanel({
               ease: "easeInOut",
             }}
           />
-        )}
-      </div>
+        </div>
+      ) : (
+        <div className="ml-2">
+          <ReportMarkdown>{text}</ReportMarkdown>
+        </div>
+      )}
     </div>
   )
 }
 
 function PersonaBackdrop({ state }: { state: SpotlightState }) {
   const { getPersona } = usePersonas()
-  const persona = state.kind === "idle" ? null : getPersona(state.agentKey)
+  const persona =
+    state.kind === "thinking" || state.kind === "spoke"
+      ? getPersona(state.agentKey)
+      : null
   return (
     <AnimatePresence>
       {persona && (
