@@ -6,6 +6,7 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { TickerCombobox } from "@/components/run/TickerCombobox"
 import { supabase } from "@/lib/supabase"
 import { useAuth } from "@/hooks/useAuth"
 import { useProfile } from "@/hooks/useProfile"
@@ -90,14 +91,10 @@ export function NewRunRoute() {
               <Label htmlFor="ticker" className="text-base">
                 Ticker
               </Label>
-              <Input
-                id="ticker"
-                placeholder="NVDA"
+              <TickerCombobox
+                inputId="ticker"
                 value={ticker}
-                onChange={(e) => setTicker(e.target.value)}
-                autoFocus
-                autoComplete="off"
-                className="h-12 font-mono text-xl uppercase tracking-wider"
+                onChange={setTicker}
               />
               <p className="text-xs text-muted-foreground">{TICKER_HINT}</p>
             </div>

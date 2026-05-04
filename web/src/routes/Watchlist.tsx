@@ -1,8 +1,9 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   ArrowRight,
+  CloudUpload,
   Loader2,
   Plus,
   Search,
@@ -19,6 +20,9 @@ import {
   useWatchlist,
   type WatchlistItem,
 } from "@/hooks/useWatchlist"
+import { useSyncWatchlistToAlpaca } from "@/hooks/useAlpacaAssets"
+import { useAuth } from "@/hooks/useAuth"
+import { supabase } from "@/lib/supabase"
 import { sfx } from "@/lib/sfx"
 import { cn } from "@/lib/utils"
 import type { Database } from "@/types/database"
@@ -39,7 +43,27 @@ const VERDICT_META: Record<
 export function WatchlistRoute() {
   const { data: items, isLoading } = useWatchlist()
   const add = useAddToWatchlist()
+  const sync = useSyncWatchlistToAlpaca()
+  const { session } = useAuth()
   const [tickerInput, setTickerInput] = useState("")
+  const [hasPaper, setHasPaper] = useState(false)
+  const [hasLive, setHasLive] = useState(false)
+
+  useEffect(() => {
+    if (!session) return
+    let alive = true
+    supabase
+      .from("brokerage_credentials")
+      .select("paper_mode")
+      .then(({ data }) => {
+        if (!alive) return
+        setHasPaper((data ?? []).some((r) => r.paper_mode))
+        setHasLive((data ?? []).some((r) => !r.paper_mode))
+      })
+    return () => {
+      alive = false
+    }
+  }, [session])
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -75,6 +99,59 @@ export function WatchlistRoute() {
           Pin tickers you follow. We'll surface the latest analyst signal for
           each one — click any row to open the analysis or run a fresh one.
         </p>
+        {(hasPaper || hasLive) && items && items.length > 0 && (
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <span className="text-xs text-muted-foreground">
+              Mirror this list to a watchlist named{" "}
+              <code className="rounded bg-muted px-1 font-mono text-[11px]">
+                StockBrief
+              </code>{" "}
+              in your Alpaca dashboard:
+            </span>
+            {hasPaper && (
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={sync.isPending}
+                onClick={() =>
+                  sync.mutate({
+                    symbols: items.map((i) => i.ticker),
+                    paperMode: true,
+                  })
+                }
+                className="h-7 gap-1.5 text-xs"
+              >
+                {sync.isPending ? (
+                  <Loader2 className="size-3 animate-spin" />
+                ) : (
+                  <CloudUpload className="size-3" />
+                )}
+                Sync to Paper
+              </Button>
+            )}
+            {hasLive && (
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={sync.isPending}
+                onClick={() =>
+                  sync.mutate({
+                    symbols: items.map((i) => i.ticker),
+                    paperMode: false,
+                  })
+                }
+                className="h-7 gap-1.5 text-xs"
+              >
+                {sync.isPending ? (
+                  <Loader2 className="size-3 animate-spin" />
+                ) : (
+                  <CloudUpload className="size-3" />
+                )}
+                Sync to Live
+              </Button>
+            )}
+          </div>
+        )}
       </motion.div>
 
       <form onSubmit={handleAdd} className="mb-6 flex gap-2">
