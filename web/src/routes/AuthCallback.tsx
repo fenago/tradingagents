@@ -10,7 +10,9 @@ export function AuthCallbackRoute() {
 
   useEffect(() => {
     if (loading) return
-    navigate(session ? "/" : "/login", { replace: true })
+    // Authed: go straight to dashboard (Dashboard mount resumes any
+    // pending Stripe checkout intent). Unauthed: back to login.
+    navigate(session ? "/dashboard" : "/login", { replace: true })
   }, [session, loading, navigate])
 
   return (
