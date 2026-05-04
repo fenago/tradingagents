@@ -1,10 +1,11 @@
-import { useState } from "react"
-import { Outlet, NavLink } from "react-router-dom"
-import { motion } from "framer-motion"
+import { useEffect, useState } from "react"
+import { Outlet, NavLink, useLocation } from "react-router-dom"
+import { motion, AnimatePresence } from "framer-motion"
 import {
   Briefcase,
   LayoutDashboard,
   LogOut,
+  Menu,
   Search,
   Star,
   TrendingUp,
@@ -14,6 +15,7 @@ import {
   Sparkles,
   Volume2,
   VolumeX,
+  X,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useTheme } from "@/lib/theme"
@@ -35,10 +37,74 @@ export function AppShell() {
   const { user, signOut } = useAuth()
   const initial = (user?.email ?? "?").trim().charAt(0).toUpperCase()
   const [sfxOn, setSfxOn] = useState(() => sfx.isEnabled())
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const location = useLocation()
+
+  // Close drawer on route change
+  useEffect(() => setMobileOpen(false), [location.pathname])
+
+  // Lock scroll while drawer open
+  useEffect(() => {
+    if (typeof document === "undefined") return
+    if (mobileOpen) {
+      document.body.style.overflow = "hidden"
+      return () => {
+        document.body.style.overflow = ""
+      }
+    }
+  }, [mobileOpen])
 
   return (
-    <div className="grid h-screen grid-cols-[260px_1fr] bg-background">
-      <aside className="relative flex flex-col border-r border-border bg-sidebar text-sidebar-foreground">
+    <div className="flex h-screen flex-col bg-background lg:grid lg:grid-cols-[260px_1fr] lg:grid-rows-1">
+      {/* Mobile top bar */}
+      <header className="flex h-14 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur lg:hidden">
+        <button
+          type="button"
+          onClick={() => setMobileOpen(true)}
+          aria-label="Open navigation"
+          className="grid size-9 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+        >
+          <Menu className="size-5" />
+        </button>
+        <div className="flex items-center gap-2">
+          <div
+            className="grid size-7 place-items-center rounded-md text-white shadow"
+            style={{
+              background:
+                "linear-gradient(135deg, oklch(0.65 0.22 265) 0%, oklch(0.6 0.2 200) 100%)",
+            }}
+          >
+            <Sparkles className="size-3.5" />
+          </div>
+          <span className="text-sm font-semibold">The Quorum</span>
+        </div>
+      </header>
+
+      {/* Drawer backdrop (mobile) */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.18 }}
+            onClick={() => setMobileOpen(false)}
+            className="fixed inset-0 z-40 bg-background/70 backdrop-blur-sm lg:hidden"
+            aria-hidden
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Sidebar (drawer on mobile, static on desktop) */}
+      <aside
+        className={cn(
+          "relative z-50 flex w-64 flex-col border-r border-border bg-sidebar text-sidebar-foreground transition-transform duration-200 lg:w-auto lg:translate-x-0",
+          // Mobile: fixed slide-in
+          "fixed inset-y-0 left-0 lg:static lg:inset-auto",
+          mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
+        )}
+        aria-hidden={!mobileOpen ? undefined : false}
+      >
         {/* faint ambient sidebar gradient */}
         <div
           className="pointer-events-none absolute inset-0 opacity-60"
@@ -70,9 +136,18 @@ export function AppShell() {
               powered by TradingAgents
             </span>
           </div>
+          {/* Drawer close (mobile only) */}
+          <button
+            type="button"
+            onClick={() => setMobileOpen(false)}
+            aria-label="Close navigation"
+            className="ml-auto grid size-8 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground lg:hidden"
+          >
+            <X className="size-4" />
+          </button>
         </div>
 
-        <nav className="relative flex-1 space-y-1 p-3">
+        <nav className="relative flex-1 space-y-1 overflow-y-auto p-3">
           {navItems.map(({ to, label, icon: Icon, hue }) => (
             <NavLink
               key={to}
@@ -196,11 +271,11 @@ export function AppShell() {
         </div>
       </aside>
 
-      <main className="relative flex flex-col overflow-y-auto">
+      <main className="relative flex flex-1 flex-col overflow-y-auto">
         <div className="flex-1">
           <Outlet />
         </div>
-        <footer className="mt-6 border-t border-border/50 px-6 py-4">
+        <footer className="mt-6 border-t border-border/50 px-4 py-4 sm:px-6">
           <p className="text-[11px] leading-relaxed text-muted-foreground/70">
             The Quorum is a research tool. The analyses, signals, and ratings
             shown are generated by AI agents from public market data and are

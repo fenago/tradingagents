@@ -191,7 +191,7 @@ export function RunRoute() {
 
       {/* Sticky header */}
       <div className="sticky top-0 z-10 border-b border-border bg-background/70 backdrop-blur-md">
-        <div className="mx-auto max-w-7xl px-6 py-4">
+        <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6 sm:py-4">
           <div className="flex flex-wrap items-center gap-3">
             <Button asChild variant="ghost" size="sm">
               <Link to="/" className="gap-2">
@@ -266,7 +266,7 @@ export function RunRoute() {
       </div>
 
       {/* Body */}
-      <div className="mx-auto grid max-w-7xl grid-cols-12 gap-6 px-6 py-6">
+      <div className="mx-auto grid max-w-7xl grid-cols-12 gap-4 px-4 py-4 sm:gap-6 sm:px-6 sm:py-6">
         {/* Left: agent timeline */}
         <aside className="col-span-12 lg:col-span-4">
           <div className="rounded-xl border border-border bg-card/80 p-4 backdrop-blur">
@@ -560,7 +560,7 @@ function RunSkeleton() {
   return (
     <div className="min-h-full">
       <div className="border-b border-border">
-        <div className="mx-auto max-w-7xl px-6 py-4">
+        <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6 sm:py-4">
           <div className="flex items-center gap-3">
             <Skeleton className="h-9 w-32" />
             <Skeleton className="h-7 w-24" />
@@ -572,7 +572,7 @@ function RunSkeleton() {
           <Skeleton className="mt-3 h-4 w-2/3" />
         </div>
       </div>
-      <div className="mx-auto grid max-w-7xl grid-cols-12 gap-6 px-6 py-6">
+      <div className="mx-auto grid max-w-7xl grid-cols-12 gap-4 px-4 py-4 sm:gap-6 sm:px-6 sm:py-6">
         <div className="col-span-12 lg:col-span-4">
           <Skeleton className="h-96 w-full" />
         </div>

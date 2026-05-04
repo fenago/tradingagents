@@ -57,7 +57,7 @@ export function PortfolioRoute() {
     (mode === "paper" ? paperConn : liveConn) ?? paperConn ?? liveConn
 
   return (
-    <div className="mx-auto max-w-7xl px-6 py-10">
+    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-10">
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
@@ -606,8 +606,8 @@ function OpenOrdersTable({
           — working in your Alpaca account
         </span>
       </h2>
-      <div className="overflow-hidden rounded-xl border border-border bg-card">
-        <table className="w-full text-sm">
+      <div className="-mx-4 overflow-x-auto rounded-xl border border-border bg-card sm:mx-0">
+        <table className="w-full min-w-[640px] text-sm">
           <thead className="border-b border-border bg-muted/30 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
             <tr>
               <th className="px-4 py-2.5 text-left">Submitted</th>
@@ -726,7 +726,94 @@ function PositionsTable({ positions }: { positions: AlpacaPosition[] }) {
   return (
     <section>
       <h2 className="label-eyebrow mb-3">Positions ({positions.length})</h2>
-      <div className="overflow-hidden rounded-xl border border-border bg-card">
+
+      {/* Mobile: card list */}
+      <div className="space-y-2 md:hidden">
+        {positions.map((p) => {
+          const pl = Number(p.unrealized_pl)
+          const plpc = Number(p.unrealized_plpc)
+          const isUp = pl >= 0
+          const color = isUp ? "#10b981" : "#f43f5e"
+          const ct = Number(p.change_today ?? "NaN")
+          const last = Number(p.current_price ?? "NaN")
+          const lastDay = Number(p.lastday_price ?? "NaN")
+          const dayPct = Number.isFinite(ct)
+            ? ct
+            : Number.isFinite(last) &&
+                Number.isFinite(lastDay) &&
+                lastDay > 0
+              ? last / lastDay - 1
+              : null
+          return (
+            <div
+              key={p.asset_id ?? p.symbol}
+              className="rounded-xl border border-border bg-card p-4"
+            >
+              <div className="flex items-baseline justify-between gap-3">
+                <span className="font-mono text-base font-semibold">
+                  {p.symbol}
+                </span>
+                <div
+                  className="flex items-center gap-1 font-mono text-sm tabular-nums"
+                  style={{ color }}
+                >
+                  {isUp ? (
+                    <ArrowUp className="size-3" />
+                  ) : (
+                    <ArrowDown className="size-3" />
+                  )}
+                  <span>
+                    {isUp ? "+" : ""}
+                    {formatCurrency(pl, 2)}
+                  </span>
+                  <span className="opacity-70">
+                    ({isUp ? "+" : ""}
+                    {(plpc * 100).toFixed(2)}%)
+                  </span>
+                </div>
+              </div>
+              <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                <Cell label="Qty" value={Number(p.qty).toLocaleString()} />
+                <Cell
+                  label="Avg cost"
+                  value={formatCurrency(Number(p.avg_entry_price), 2)}
+                />
+                <Cell
+                  label="Last"
+                  value={
+                    p.current_price
+                      ? formatCurrency(Number(p.current_price), 2)
+                      : "—"
+                  }
+                />
+                <Cell
+                  label="Today"
+                  value={
+                    dayPct !== null
+                      ? `${dayPct >= 0 ? "+" : ""}${(dayPct * 100).toFixed(2)}%`
+                      : "—"
+                  }
+                  valueColor={
+                    dayPct !== null
+                      ? dayPct >= 0
+                        ? "#10b981"
+                        : "#f43f5e"
+                      : undefined
+                  }
+                />
+                <Cell
+                  label="Market value"
+                  value={formatCurrency(Number(p.market_value), 2)}
+                  span={2}
+                />
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Desktop: table */}
+      <div className="hidden overflow-hidden rounded-xl border border-border bg-card md:block">
         <table className="w-full text-sm">
           <thead className="border-b border-border bg-muted/30 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
             <tr>
@@ -825,8 +912,8 @@ function ClosedOrdersTable({ orders }: { orders: AlpacaOrder[] }) {
       <h2 className="label-eyebrow mb-3">
         Order history ({orders.length})
       </h2>
-      <div className="overflow-hidden rounded-xl border border-border bg-card">
-        <table className="w-full text-sm">
+      <div className="-mx-4 overflow-x-auto rounded-xl border border-border bg-card sm:mx-0">
+        <table className="w-full min-w-[640px] text-sm">
           <thead className="border-b border-border bg-muted/30 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
             <tr>
               <th className="px-4 py-2.5 text-left">Submitted</th>
@@ -1034,6 +1121,32 @@ function ActivitiesTimeline({ activities }: { activities: AlpacaActivity[] }) {
         )}
       </div>
     </section>
+  )
+}
+
+function Cell({
+  label,
+  value,
+  valueColor,
+  span,
+}: {
+  label: string
+  value: string
+  valueColor?: string
+  span?: 1 | 2
+}) {
+  return (
+    <div className={span === 2 ? "col-span-2" : undefined}>
+      <div className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
+        {label}
+      </div>
+      <div
+        className="mt-0.5 font-mono text-sm tabular-nums"
+        style={valueColor ? { color: valueColor } : undefined}
+      >
+        {value}
+      </div>
+    </div>
   )
 }
 

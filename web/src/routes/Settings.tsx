@@ -64,7 +64,7 @@ const RESPONSIBILITIES: Record<string, string> = {
 
 export function SettingsRoute() {
   return (
-    <div className="mx-auto max-w-4xl px-6 py-10">
+    <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-10">
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
@@ -78,7 +78,7 @@ export function SettingsRoute() {
       </motion.div>
 
       <Tabs defaultValue="cast" className="mt-8">
-        <TabsList>
+        <TabsList className="flex w-full overflow-x-auto sm:inline-flex sm:w-auto">
           <TabsTrigger value="cast" className="gap-2">
             <Users className="size-3.5" />
             The Cast
