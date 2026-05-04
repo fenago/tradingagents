@@ -177,7 +177,7 @@ function Hero({ connected }: { connected: boolean }) {
           <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
             Connect Alpaca to act on a research call with one click.{" "}
             <strong>Your account, your money, your decisions.</strong>{" "}
-            StockBrief never holds your funds — your brokerage does.
+            The Quorum never holds your funds — your brokerage does.
           </p>
           {connected && (
             <Badge
@@ -725,7 +725,7 @@ function ComplianceFooter() {
         <strong className="text-foreground">
           You make your own investment decisions.
         </strong>{" "}
-        StockBrief is a research tool — the analyses, signals, and ratings shown
+        The Quorum is a research tool — the analyses, signals, and ratings shown
         are AI-generated from public market data. We are not a registered
         investment adviser, do not custody your funds, and never auto-trade.
         Every order originates from a click you make and is executed by Alpaca

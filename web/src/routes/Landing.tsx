@@ -88,7 +88,7 @@ function Nav() {
             <Sparkles className="size-4" />
           </motion.div>
           <span className="text-lg font-semibold tracking-tight">
-            StockBrief
+            The Quorum
           </span>
         </Link>
         <nav className="ml-10 hidden items-center gap-6 text-sm md:flex">
@@ -840,7 +840,7 @@ function Trust() {
             Built for sovereign investors. Not casino mode.
           </h2>
           <p className="mt-5 text-lg leading-relaxed text-muted-foreground">
-            StockBrief is intelligence infrastructure. We don't auto-trade.
+            The Quorum is intelligence infrastructure. We don't auto-trade.
             We don't custody funds. We don't tell you what to buy. We deliver
             the briefing — your decision, your brokerage, your authority.
           </p>
@@ -931,7 +931,7 @@ function Footer() {
           >
             <Sparkles className="size-3.5" />
           </div>
-          <span className="text-sm font-semibold">StockBrief</span>
+          <span className="text-sm font-semibold">The Quorum</span>
           <span className="text-xs text-muted-foreground">
             powered by TradingAgents
           </span>

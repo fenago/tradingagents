@@ -165,7 +165,7 @@ export function ModelsKeysSettings() {
               <InfoTip>
                 When you provide a key, the worker calls that provider directly
                 using your account — you pay the provider their rate, no
-                StockBrief markup. Without a key, runs use the platform's
+                Quorum markup. Without a key, runs use the platform's
                 shared keys at the standard per-credit price.
               </InfoTip>
             </h2>

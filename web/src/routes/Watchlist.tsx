@@ -104,7 +104,7 @@ export function WatchlistRoute() {
             <span className="text-xs text-muted-foreground">
               Mirror this list to a watchlist named{" "}
               <code className="rounded bg-muted px-1 font-mono text-[11px]">
-                StockBrief
+                Quorum
               </code>{" "}
               in your Alpaca dashboard:
             </span>

@@ -91,7 +91,7 @@ export function LoginRoute() {
           >
             <Sparkles className="size-4" />
           </div>
-          <span className="font-semibold">StockBrief</span>
+          <span className="font-semibold">The Quorum</span>
         </motion.div>
 
         <motion.div
@@ -187,7 +187,7 @@ export function LoginRoute() {
               >
                 <Sparkles className="size-4" />
               </div>
-              <span className="font-semibold">StockBrief</span>
+              <span className="font-semibold">The Quorum</span>
             </div>
             <p className="mt-3 text-sm text-muted-foreground">
               <span className="font-medium text-foreground">
@@ -209,7 +209,7 @@ export function LoginRoute() {
               >
                 <div className="space-y-2">
                   <h1 className="text-2xl font-semibold tracking-tight">
-                    Sign in to StockBrief
+                    Sign in to The Quorum
                   </h1>
                   <p className="text-sm text-muted-foreground">
                     Use your email or a social provider. No password required.

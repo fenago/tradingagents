@@ -232,7 +232,7 @@ export function OrderModal({
                   <strong className="text-foreground">
                     I make my own investment decisions.
                   </strong>{" "}
-                  StockBrief's analysis is research, not advice. This order is
+                  The Quorum's analysis is research, not advice. This order is
                   my decision and will be executed in my Alpaca account.
                 </div>
               </label>

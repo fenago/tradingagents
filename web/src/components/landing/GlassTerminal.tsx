@@ -107,7 +107,7 @@ export function GlassTerminal() {
                   <span className="size-2 rounded-full bg-amber-400/60" />
                   <span className="size-2 rounded-full bg-emerald-400/60" />
                 </span>
-                <span className="ml-2">stockbrief · live brief</span>
+                <span className="ml-2">thequorum · live brief</span>
               </div>
               <div className="flex items-center gap-1.5 font-mono text-[10px] text-muted-foreground">
                 <motion.span
