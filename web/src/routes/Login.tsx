@@ -8,6 +8,8 @@ import { useAuth } from "@/hooks/useAuth"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { MeshGradient } from "@/components/landing/MeshGradient"
+import { ParticleNetwork } from "@/components/ui/particle-network"
 
 export function LoginRoute() {
   const { session } = useAuth()
@@ -59,16 +61,34 @@ export function LoginRoute() {
   }
 
   return (
-    <div className="grid min-h-screen grid-cols-1 lg:grid-cols-2">
-      {/* Left — brand panel */}
-      <div className="relative hidden overflow-hidden border-r border-border bg-sidebar lg:flex lg:flex-col lg:justify-between lg:p-12">
+    <div className="grid min-h-screen grid-cols-1 lg:grid-cols-[1.1fr_1fr]">
+      {/* Left — brand panel — mirrors the landing hero */}
+      <div className="relative isolate hidden overflow-hidden bg-background lg:flex lg:flex-col lg:justify-between lg:p-12">
+        {/* Layer 1 — drifting aurora mesh gradient */}
+        <div className="pointer-events-none absolute inset-0 -z-20" aria-hidden>
+          <MeshGradient />
+        </div>
+        {/* Layer 2 — networked particle field */}
+        <ParticleNetwork
+          containerId="login-particles"
+          className="pointer-events-auto absolute inset-0 -z-10"
+        />
+
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="flex items-center gap-2"
+          className="relative flex items-center gap-2"
         >
-          <div className="grid size-9 place-items-center rounded-md bg-primary text-primary-foreground">
+          <div
+            className="grid size-9 place-items-center rounded-md text-white shadow-lg"
+            style={{
+              background:
+                "linear-gradient(135deg, oklch(0.65 0.22 265) 0%, oklch(0.6 0.2 200) 100%)",
+              boxShadow:
+                "0 0 24px oklch(0.65 0.22 265 / 0.4), 0 4px 8px rgb(0 0 0 / 0.3)",
+            }}
+          >
             <Sparkles className="size-4" />
           </div>
           <span className="font-semibold">StockBrief</span>
@@ -78,21 +98,76 @@ export function LoginRoute() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1 }}
-          className="space-y-4"
+          className="relative max-w-lg space-y-6"
         >
-          <p className="text-3xl font-medium leading-tight text-foreground">
-            Ten AI analysts.
-            <br />
-            <span className="text-muted-foreground">One verdict.</span>
-          </p>
-          <p className="max-w-md text-sm text-muted-foreground">
-            Watch a team of specialized agents debate any ticker — fundamentals,
-            sentiment, news, technicals, bull vs. bear, risk — and get a clear
-            Buy / Hold / Sell call with the full reasoning trail.
-          </p>
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.18, duration: 0.5 }}
+            className="inline-flex items-center gap-2 rounded-full border border-border bg-background/40 px-3 py-1 backdrop-blur"
+          >
+            <motion.span
+              className="inline-block size-1.5 rounded-full"
+              style={{ background: "#06b6d4" }}
+              animate={{ opacity: [0.3, 1, 0.3], scale: [1, 1.3, 1] }}
+              transition={{ duration: 1.8, repeat: Infinity }}
+            />
+            <span className="font-mono text-[10px] tracking-[0.18em]">
+              HEDGE-FUND FIREPOWER · FOR EVERYDAY INVESTORS
+            </span>
+          </motion.div>
+
+          <h1 className="font-display text-balance text-5xl leading-[1.05] tracking-tight">
+            <motion.span
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.22 }}
+              className="block"
+            >
+              12 AI analysts.
+            </motion.span>
+            <motion.span
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.32 }}
+              className="block italic"
+              style={{
+                background:
+                  "linear-gradient(135deg, #06b6d4 0%, #10b981 50%, #06b6d4 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+              }}
+            >
+              One verdict.
+            </motion.span>
+          </h1>
+
+          <motion.p
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.42 }}
+            className="text-balance text-base leading-relaxed text-muted-foreground sm:text-lg"
+          >
+            The research stack a Wall Street desk pays{" "}
+            <span className="text-foreground">six figures a year</span> for —
+            fundamentals, sentiment, news, technicals, bull-versus-bear debate,
+            three-way risk review — running on{" "}
+            <span className="text-foreground">your tickers</span>, in your
+            account, without the price tag.
+          </motion.p>
+
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.55 }}
+            className="font-mono text-xs tracking-wider text-muted-foreground/80"
+          >
+            We provide the intelligence. You provide the command.
+          </motion.p>
         </motion.div>
 
-        <div className="text-xs text-muted-foreground">
+        <div className="relative text-xs text-muted-foreground">
           Research tool. Not financial advice.
         </div>
       </div>
@@ -100,6 +175,28 @@ export function LoginRoute() {
       {/* Right — auth form */}
       <div className="flex flex-col justify-center p-8 lg:p-12">
         <div className="mx-auto w-full max-w-sm">
+          {/* Mobile-only brand mark + tagline */}
+          <div className="mb-8 lg:hidden">
+            <div className="flex items-center gap-2">
+              <div
+                className="grid size-9 place-items-center rounded-md text-white shadow-lg"
+                style={{
+                  background:
+                    "linear-gradient(135deg, oklch(0.65 0.22 265) 0%, oklch(0.6 0.2 200) 100%)",
+                }}
+              >
+                <Sparkles className="size-4" />
+              </div>
+              <span className="font-semibold">StockBrief</span>
+            </div>
+            <p className="mt-3 text-sm text-muted-foreground">
+              <span className="font-medium text-foreground">
+                Hedge-fund firepower
+              </span>{" "}
+              for everyday investors. 12 AI analysts. One verdict.
+            </p>
+          </div>
+
           <AnimatePresence mode="wait" initial={false}>
             {stage === "form" ? (
               <motion.div
@@ -232,9 +329,7 @@ export function LoginRoute() {
                   </h1>
                   <p className="text-sm text-muted-foreground">
                     We sent a magic link to{" "}
-                    <span className="font-medium text-foreground">
-                      {email}
-                    </span>
+                    <span className="font-medium text-foreground">{email}</span>
                     . Click it to finish signing in.
                   </p>
                 </div>

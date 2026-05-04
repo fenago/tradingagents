@@ -18,6 +18,8 @@ import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton"
 import { AgentAvatar } from "@/components/run/AgentAvatar"
 import { BrokerageSettings } from "@/components/settings/BrokerageSettings"
+import { RunDefaultsSettings } from "@/components/settings/RunDefaultsSettings"
+import { AccountSettings } from "@/components/settings/AccountSettings"
 import { PERSONAS, type Persona } from "@/lib/agent_personas"
 import { PHASES } from "@/hooks/useDirector"
 import { usePersonas } from "@/hooks/usePersonas"
@@ -99,11 +101,11 @@ export function SettingsRoute() {
         </TabsContent>
 
         <TabsContent value="defaults" className="mt-6">
-          <ComingSoon label="Run Defaults" />
+          <RunDefaultsSettings />
         </TabsContent>
 
         <TabsContent value="account" className="mt-6">
-          <ComingSoon label="Account" />
+          <AccountSettings />
         </TabsContent>
       </Tabs>
     </div>
@@ -381,17 +383,6 @@ function CastRow({
       </div>
 
     </motion.div>
-  )
-}
-
-function ComingSoon({ label }: { label: string }) {
-  return (
-    <div className="rounded-lg border border-dashed border-border bg-card/40 p-12 text-center">
-      <h3 className="text-base font-semibold">{label} — coming soon</h3>
-      <p className="mt-1 text-sm text-muted-foreground">
-        Up next: model selection, debate rounds, BYOK keys, billing portal.
-      </p>
-    </div>
   )
 }
 

@@ -1,6 +1,7 @@
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion"
 import { useEffect } from "react"
 import { Coins } from "lucide-react"
+import { InfoTip } from "@/components/ui/tooltip"
 
 export function CostTicker({ value }: { value: number }) {
   const mv = useMotionValue(0)
@@ -18,6 +19,11 @@ export function CostTicker({ value }: { value: number }) {
       <motion.span className="font-mono tabular-nums text-foreground">
         {display}
       </motion.span>
+      <InfoTip side="bottom">
+        What this analysis cost to run — input + output tokens across all 12
+        agents, the news/data API calls, and embedding lookups. Updates live
+        as the run progresses.
+      </InfoTip>
     </div>
   )
 }

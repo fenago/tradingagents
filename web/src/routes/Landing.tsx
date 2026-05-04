@@ -168,7 +168,7 @@ function Hero() {
                 transition={{ duration: 1.8, repeat: Infinity }}
               />
               <span className="font-mono text-[10px] tracking-[0.18em]">
-                INTELLIGENCE INFRASTRUCTURE · LIVE
+                HEDGE-FUND FIREPOWER · FOR EVERYDAY INVESTORS
               </span>
             </Badge>
 
@@ -204,11 +204,12 @@ function Hero() {
               transition={{ duration: 0.6, delay: 0.25 }}
               className="mt-6 max-w-xl text-balance text-lg leading-relaxed text-muted-foreground sm:text-xl"
             >
-              Twelve specialized AI analysts run an{" "}
-              <span className="text-foreground">adversarial process</span> on
-              every ticker — Bull versus Bear, technical versus fundamental,
-              signal versus noise. You watch the work. You audit the logic.
-              You make the call.
+              The research stack a hedge fund pays{" "}
+              <span className="text-foreground">six figures a year</span> for —
+              twelve specialized AI analysts running an adversarial debate on
+              every ticker, Bull versus Bear, technical versus fundamental —
+              priced for everyday investors. You watch the work. You audit the
+              logic. You make the call.
             </motion.p>
 
             <motion.p
@@ -816,7 +817,7 @@ function Trust() {
     {
       icon: Lock,
       title: "Encrypted. Never logged.",
-      body: "Brokerage keys live in Supabase Vault. Decrypted only at order-time, server-side. Never enter AI context, error reports, or analytics.",
+      body: "Brokerage keys live in our encrypted vault. Decrypted only at order-time, server-side. Never enter AI context, error reports, or analytics.",
     },
     {
       icon: BarChart3,

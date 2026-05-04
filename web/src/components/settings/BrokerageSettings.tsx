@@ -336,7 +336,7 @@ function ConnectedBody({
   const disconnect = async () => {
     if (
       !confirm(
-        `Disconnect ${MODE_META[mode].label.toLowerCase()} account? Keys will be wiped from our Vault.`,
+        `Disconnect ${MODE_META[mode].label.toLowerCase()} account? Keys will be wiped from our encrypted vault.`,
       )
     ) {
       return
@@ -391,7 +391,7 @@ function ConnectedBody({
           <code className="rounded bg-muted px-1 font-mono text-[10px]">
             {connection.key_id_hint}
           </code>{" "}
-          · Vault-encrypted
+          · vault-encrypted
         </span>
         <span className="ml-auto">
           Connected {new Date(connection.connected_at).toLocaleDateString()}
@@ -598,8 +598,8 @@ const STEPS = [
     title: "Paste both keys above",
     body: (
       <>
-        We verify them with Alpaca, then store them encrypted in{" "}
-        <strong>Supabase Vault</strong>. Never logged, never in AI context.
+        We verify them with Alpaca, then store them in our{" "}
+        <strong>encrypted vault</strong>. Never logged, never in AI context.
       </>
     ),
   },
@@ -665,7 +665,7 @@ function ValueProps() {
       {
         icon: Lock,
         title: "Encrypted, never logged",
-        body: "Keys stored in Supabase Vault — only decrypted server-side at order time. Never in AI context, error reports, or analytics.",
+        body: "Keys stored in our encrypted vault — only decrypted server-side at order time. Never in AI context, error reports, or analytics.",
         hue: 280,
       },
       {

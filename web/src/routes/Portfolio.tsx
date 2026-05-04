@@ -35,6 +35,7 @@ import {
 import { cn, formatCurrency, formatPercent } from "@/lib/utils"
 import { useQueryClient } from "@tanstack/react-query"
 import { EquityChart } from "@/components/portfolio/EquityChart"
+import { InfoTip } from "@/components/ui/tooltip"
 
 export function PortfolioRoute() {
   const { data, isLoading, isFetching, error } = usePortfolio()
@@ -301,27 +302,59 @@ function AccountSummary({
   const dayPnlPct = lastEquity > 0 ? dayPnl / lastEquity : 0
   const isUp = dayPnl >= 0
 
-  const stats = [
+  const stats: Array<{
+    label: string
+    value: string
+    sub?: string
+    hue?: number
+    color?: string
+    hint: React.ReactNode
+  }> = [
     {
       label: paperMode ? "Equity (paper)" : "Equity",
       value: formatCurrency(equity, 2),
       hue: 250,
+      hint: (
+        <>
+          Total value of your account: cash plus the current market value of
+          all positions. This is the number that grows or shrinks with the
+          market.
+        </>
+      ),
     },
     {
       label: "Day P&L",
       value: `${isUp ? "+" : ""}${formatCurrency(dayPnl, 2)}`,
       sub: `${isUp ? "+" : ""}${formatPercent(dayPnlPct, 2)}`,
       color: isUp ? "#10b981" : "#f43f5e",
+      hint: (
+        <>
+          Profit or loss since yesterday's close. Equity today minus equity
+          at yesterday's close. Resets each trading day.
+        </>
+      ),
     },
     {
       label: "Cash",
       value: formatCurrency(Number(account.cash ?? 0), 2),
       hue: 200,
+      hint: (
+        <>
+          Settled cash you can withdraw or use to buy. Doesn't include cash
+          tied up in open positions.
+        </>
+      ),
     },
     {
       label: "Buying power",
       value: formatCurrency(Number(account.buying_power ?? 0), 2),
       hue: 145,
+      hint: (
+        <>
+          What you can spend right now on new positions. On a margin account
+          this is up to 2× cash; on a cash account it equals settled cash.
+        </>
+      ),
     },
   ]
 
@@ -344,8 +377,9 @@ function AccountSummary({
               }}
               aria-hidden
             />
-            <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-              {s.label}
+            <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+              <span>{s.label}</span>
+              <InfoTip>{s.hint}</InfoTip>
             </div>
             <div
               className="mt-2 font-mono text-2xl font-semibold tabular-nums"
@@ -391,6 +425,12 @@ function PdtPanel({ account }: { account: AlpacaAccount }) {
       >
         <Shield className="size-4" style={{ color: tone.color }} />
         <span className="font-medium">Day-trade window</span>
+        <InfoTip>
+          A "day trade" is buying and selling the same stock on the same
+          trading day. FINRA's Pattern Day Trader rule: 4 or more day trades
+          in any rolling 5-business-day window flags you as a PDT, which
+          requires $25,000 minimum equity to keep trading.
+        </InfoTip>
         <span className="font-mono tabular-nums">
           {dt} {isPdt ? "today" : `of ${limit} (5-day window)`}
         </span>
