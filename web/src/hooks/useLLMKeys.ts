@@ -84,6 +84,45 @@ export function useDeleteLLMKey() {
   })
 }
 
+/**
+ * Suggested model strings per provider — used to populate the model
+ * picker. For Ollama these come from the Cloud catalog. The user can
+ * always type a custom model name.
+ */
+export const PROVIDER_MODEL_SUGGESTIONS: Record<Provider, string[]> = {
+  anthropic: [
+    "claude-sonnet-4-6",
+    "claude-opus-4-7",
+    "claude-haiku-4-5-20251001",
+  ],
+  openai: ["gpt-4o", "gpt-4o-mini", "o3-mini", "o1"],
+  deepseek: ["deepseek-chat", "deepseek-reasoner"],
+  google: [
+    "gemini-2.5-pro",
+    "gemini-2.5-flash",
+    "gemini-2.0-flash",
+    "gemini-2.0-pro",
+  ],
+  xai: ["grok-4", "grok-2-latest", "grok-2-1212"],
+  openrouter: [
+    "openai/gpt-4o",
+    "openai/gpt-4o-mini",
+    "anthropic/claude-sonnet-4.6",
+    "anthropic/claude-opus-4.7",
+    "deepseek/deepseek-chat",
+  ],
+  qwen: ["qwen3-max", "qwen3-coder-plus", "qwen-plus", "qwen-turbo"],
+  glm: ["glm-4-plus", "glm-4-air", "glm-4-flash"],
+  ollama: [
+    "gpt-oss:120b",
+    "gpt-oss:20b",
+    "qwen2.5:72b",
+    "llama3.3:70b",
+    "deepseek-r1:70b",
+  ],
+  azure: [],
+}
+
 export const PROVIDER_LABEL: Record<Provider, string> = {
   anthropic: "Anthropic",
   openai: "OpenAI",

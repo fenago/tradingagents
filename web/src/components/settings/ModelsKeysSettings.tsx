@@ -1,7 +1,8 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   Check,
+  Cpu,
   Eye,
   EyeOff,
   ExternalLink,
@@ -12,6 +13,7 @@ import {
   ShieldCheck,
   Trash2,
 } from "lucide-react"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -19,11 +21,13 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { InfoTip } from "@/components/ui/tooltip"
 import {
   PROVIDER_LABEL,
+  PROVIDER_MODEL_SUGGESTIONS,
   useDeleteLLMKey,
   useLLMKeys,
   useSetLLMKey,
   type Provider,
 } from "@/hooks/useLLMKeys"
+import { useProfile, useUpdateProfile } from "@/hooks/useProfile"
 import { cn } from "@/lib/utils"
 
 type ProviderMeta = {
@@ -280,6 +284,9 @@ function ProviderCard({
               {new Date(connected.updated_at).toLocaleDateString()}
             </p>
           )}
+          {connected && !open && (
+            <ModelPicker provider={meta.provider} color={color} />
+          )}
         </div>
 
         <div className="flex shrink-0 gap-2">
@@ -445,6 +452,181 @@ function KeyForm({
         </p>
       </div>
     </form>
+  )
+}
+
+function ModelPicker({
+  provider,
+  color,
+}: {
+  provider: Provider
+  color: string
+}) {
+  const { data: profile } = useProfile()
+  const update = useUpdateProfile()
+  const suggestions = PROVIDER_MODEL_SUGGESTIONS[provider] ?? []
+  const stored =
+    ((profile?.preferences as { llm_models?: Record<string, string> })
+      ?.llm_models?.[provider] ?? "") as string
+
+  const [value, setValue] = useState(stored)
+  const [editing, setEditing] = useState(false)
+
+  // Re-hydrate when profile changes (e.g. after save)
+  useEffect(() => {
+    setValue(stored)
+  }, [stored])
+
+  const save = async () => {
+    const v = value.trim()
+    try {
+      const prefs = ((profile?.preferences as object) ?? {}) as Record<
+        string,
+        unknown
+      >
+      const llm_models = {
+        ...((prefs.llm_models as Record<string, string>) ?? {}),
+      }
+      if (v) llm_models[provider] = v
+      else delete llm_models[provider]
+      await update.mutateAsync({
+        preferences: { ...prefs, llm_models },
+      })
+      toast.success(
+        v
+          ? `${PROVIDER_LABEL[provider]} default model set to ${v}`
+          : `${PROVIDER_LABEL[provider]} default model cleared`,
+      )
+      setEditing(false)
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not save")
+    }
+  }
+
+  const isOllama = provider === "ollama"
+  const showAlways = isOllama // Ollama is the one the user explicitly asked to expose
+  if (!showAlways && !stored && !editing) {
+    return (
+      <button
+        type="button"
+        onClick={() => setEditing(true)}
+        className="mt-2 inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground"
+      >
+        <Cpu className="size-3" />
+        Pick a default model
+      </button>
+    )
+  }
+
+  if (!editing && stored) {
+    return (
+      <div className="mt-2 inline-flex items-center gap-2 text-[11px] text-muted-foreground">
+        <Cpu className="size-3" style={{ color }} />
+        <span>
+          Default model:{" "}
+          <code className="rounded bg-muted px-1 font-mono">{stored}</code>
+        </span>
+        <button
+          type="button"
+          onClick={() => setEditing(true)}
+          className="text-muted-foreground/70 underline-offset-2 hover:text-foreground hover:underline"
+        >
+          change
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <div className="mt-3 space-y-1.5">
+      <Label
+        htmlFor={`model-${provider}`}
+        className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground"
+      >
+        <Cpu className="size-3" />
+        Default model
+        {isOllama && (
+          <a
+            href="https://ollama.com/search?c=cloud"
+            target="_blank"
+            rel="noreferrer"
+            className="ml-2 normal-case tracking-normal text-[10px] text-primary hover:underline"
+          >
+            browse Ollama Cloud catalog
+          </a>
+        )}
+        <InfoTip>
+          Used when this provider's key drives an agent chat or run.
+          Free-form — type any model name the provider exposes (e.g.
+          {isOllama
+            ? " gpt-oss:120b, qwen2.5:72b, llama3.3:70b"
+            : ` ${suggestions[0]}`}
+          ).
+        </InfoTip>
+      </Label>
+      <div className="flex gap-2">
+        <Input
+          id={`model-${provider}`}
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          placeholder={suggestions[0] ?? "model name"}
+          list={`model-list-${provider}`}
+          className="font-mono text-sm"
+        />
+        {suggestions.length > 0 && (
+          <datalist id={`model-list-${provider}`}>
+            {suggestions.map((s) => (
+              <option key={s} value={s} />
+            ))}
+          </datalist>
+        )}
+        <Button
+          type="button"
+          size="sm"
+          onClick={save}
+          disabled={update.isPending}
+          className="gap-1.5"
+        >
+          {update.isPending ? (
+            <Loader2 className="size-3 animate-spin" />
+          ) : (
+            <Check className="size-3" />
+          )}
+          Save
+        </Button>
+        {stored && (
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            onClick={() => {
+              setValue("")
+            }}
+          >
+            Clear
+          </Button>
+        )}
+      </div>
+      {suggestions.length > 0 && (
+        <div className="flex flex-wrap gap-1">
+          {suggestions.map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => setValue(s)}
+              className={cn(
+                "rounded-full border px-2 py-0.5 font-mono text-[10px] transition-colors",
+                value === s
+                  ? "border-primary/40 bg-primary/10 text-foreground"
+                  : "border-border text-muted-foreground hover:bg-muted/40",
+              )}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   )
 }
 
