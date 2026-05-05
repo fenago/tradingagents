@@ -24,6 +24,7 @@ import {
   PROVIDER_MODEL_SUGGESTIONS,
   useDeleteLLMKey,
   useLLMKeys,
+  useProviderModels,
   useSetLLMKey,
   type Provider,
 } from "@/hooks/useLLMKeys"
@@ -464,13 +465,28 @@ function ModelPicker({
 }) {
   const { data: profile } = useProfile()
   const update = useUpdateProfile()
-  const suggestions = PROVIDER_MODEL_SUGGESTIONS[provider] ?? []
   const stored =
     ((profile?.preferences as { llm_models?: Record<string, string> })
       ?.llm_models?.[provider] ?? "") as string
 
   const [value, setValue] = useState(stored)
   const [editing, setEditing] = useState(false)
+
+  // Live model list from the provider, fetched lazily when the user
+  // expands the picker or has a stored value.
+  const fetchEnabled = editing || (!!stored && provider === "ollama")
+  const { data: liveData, isFetching, refetch } = useProviderModels(
+    provider,
+    fetchEnabled,
+  )
+
+  // Build the choices: live list when available, else seed-list fallback.
+  const liveModels = liveData?.models ?? []
+  const fallback = PROVIDER_MODEL_SUGGESTIONS[provider] ?? []
+  const usingLive = liveModels.length > 0
+  const choices: Array<{ id: string; label?: string }> = usingLive
+    ? liveModels
+    : fallback.map((id) => ({ id }))
 
   // Re-hydrate when profile changes (e.g. after save)
   useEffect(() => {
@@ -537,6 +553,14 @@ function ModelPicker({
     )
   }
 
+  const sourceLabel = isFetching
+    ? "loading live catalog…"
+    : usingLive
+      ? `${choices.length} models available · live from ${PROVIDER_LABEL[provider]}`
+      : choices.length > 0
+        ? "fallback list — couldn't reach provider"
+        : "no models known"
+
   return (
     <div className="mt-3 space-y-1.5">
       <Label
@@ -557,29 +581,32 @@ function ModelPicker({
         )}
         <InfoTip>
           Used when this provider's key drives an agent chat or run.
-          Free-form — type any model name the provider exposes (e.g.
-          {isOllama
-            ? " gpt-oss:120b, qwen2.5:72b, llama3.3:70b"
-            : ` ${suggestions[0]}`}
-          ).
+          List is fetched live from {PROVIDER_LABEL[provider]} using your
+          stored key. You can also type a custom model name.
         </InfoTip>
       </Label>
       <div className="flex gap-2">
-        <Input
+        <select
           id={`model-${provider}`}
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          placeholder={suggestions[0] ?? "model name"}
-          list={`model-list-${provider}`}
-          className="font-mono text-sm"
-        />
-        {suggestions.length > 0 && (
-          <datalist id={`model-list-${provider}`}>
-            {suggestions.map((s) => (
-              <option key={s} value={s} />
-            ))}
-          </datalist>
-        )}
+          value={
+            choices.some((c) => c.id === value) || !value ? value : "__custom"
+          }
+          onChange={(e) => {
+            if (e.target.value === "__custom") return // keep current value
+            setValue(e.target.value)
+          }}
+          className="h-9 flex-1 rounded-md border border-input bg-background px-3 font-mono text-sm"
+        >
+          <option value="">— pick a model —</option>
+          {choices.map((m) => (
+            <option key={m.id} value={m.id}>
+              {m.label ? `${m.id} — ${m.label}` : m.id}
+            </option>
+          ))}
+          {value && !choices.some((c) => c.id === value) && (
+            <option value="__custom">{value} (custom)</option>
+          )}
+        </select>
         <Button
           type="button"
           size="sm"
@@ -607,25 +634,23 @@ function ModelPicker({
           </Button>
         )}
       </div>
-      {suggestions.length > 0 && (
-        <div className="flex flex-wrap gap-1">
-          {suggestions.map((s) => (
-            <button
-              key={s}
-              type="button"
-              onClick={() => setValue(s)}
-              className={cn(
-                "rounded-full border px-2 py-0.5 font-mono text-[10px] transition-colors",
-                value === s
-                  ? "border-primary/40 bg-primary/10 text-foreground"
-                  : "border-border text-muted-foreground hover:bg-muted/40",
-              )}
-            >
-              {s}
-            </button>
-          ))}
-        </div>
-      )}
+      <Input
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        placeholder="Or type a custom model name…"
+        className="font-mono text-xs"
+      />
+      <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+        <span>{sourceLabel}</span>
+        <button
+          type="button"
+          onClick={() => refetch()}
+          disabled={isFetching}
+          className="underline-offset-2 hover:text-foreground hover:underline"
+        >
+          {isFetching ? "refreshing…" : "refresh list"}
+        </button>
+      </div>
     </div>
   )
 }

@@ -6,6 +6,47 @@ import type { Database } from "@/types/database"
 
 export type Provider = Database["public"]["Enums"]["llm_provider"]
 
+export type ProviderModel = {
+  id: string
+  label?: string
+  owned_by?: string
+}
+
+/**
+ * Live model catalog for a provider, pulled from the provider's API
+ * via the llm-models-list Edge Function. Cached for an hour. Returns
+ * null while the function isn't reachable so the caller can fall back.
+ */
+export function useProviderModels(provider: Provider, enabled: boolean) {
+  return useQuery({
+    queryKey: ["llm-provider-models", provider],
+    enabled: enabled,
+    staleTime: 60 * 60 * 1000,
+    gcTime: 60 * 60 * 1000,
+    retry: false,
+    queryFn: async (): Promise<{
+      models: ProviderModel[]
+      note?: string
+      error?: string
+    }> => {
+      const { data, error } = await supabase.functions.invoke(
+        "llm-models-list",
+        { body: { provider } },
+      )
+      if (error) {
+        return { models: [], error: error.message }
+      }
+      if (!data?.ok && data?.error) {
+        return { models: [], error: data.detail ?? data.error }
+      }
+      return {
+        models: (data?.models ?? []) as ProviderModel[],
+        note: data?.note,
+      }
+    },
+  })
+}
+
 export type LLMKeyMeta = {
   provider: Provider
   hint: string
