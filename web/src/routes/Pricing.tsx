@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { useCheckout } from "@/hooks/useCheckout"
 import { useProfile } from "@/hooks/useProfile"
+import { CreditPackPurchase } from "@/components/billing/CreditPackPurchase"
 import { cn } from "@/lib/utils"
 
 const TIERS = [
@@ -173,6 +174,12 @@ export function PricingRoute() {
         </code>
         , any future date, any CVC.
       </p>
+
+      {/* Credit-pack top-up — only renders for active subscribers */}
+      <div className="mx-auto mt-12 max-w-3xl">
+        <h2 className="label-eyebrow mb-3">Need more credits this month?</h2>
+        <CreditPackPurchase variant="card" />
+      </div>
     </div>
   )
 }

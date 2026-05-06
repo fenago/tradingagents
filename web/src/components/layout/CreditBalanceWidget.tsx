@@ -74,7 +74,7 @@ export function CreditBalanceWidget() {
         )}
         variant={isOut || isLow ? "default" : "outline"}
       >
-        <Link to="/pricing">
+        <Link to={isOut || isLow ? "/settings?tab=billing" : "/pricing"}>
           <Sparkles className="size-3" />
           {isOut
             ? "Top up credits"

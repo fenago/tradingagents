@@ -17,6 +17,7 @@ import { useProfile } from "@/hooks/useProfile"
 import { useCreditBalance, useCreditTransactions } from "@/hooks/useCredits"
 import { supabase } from "@/lib/supabase"
 import { cn, formatCurrency } from "@/lib/utils"
+import { CreditPackPurchase } from "@/components/billing/CreditPackPurchase"
 
 const REASON_LABEL: Record<string, string> = {
   subscription_grant: "Subscription credit",
@@ -25,6 +26,7 @@ const REASON_LABEL: Record<string, string> = {
   manual_grant: "Manual grant",
   refund: "Refund",
   overage_topup: "Overage top-up",
+  credit_pack: "Credit pack purchase",
 }
 
 export function BillingSettings() {
@@ -135,6 +137,9 @@ export function BillingSettings() {
           </p>
         </motion.div>
       </div>
+
+      {/* Credit pack purchase */}
+      <CreditPackPurchase variant="card" />
 
       {/* Portal button */}
       <Button onClick={openPortal} disabled={opening} className="gap-2">
