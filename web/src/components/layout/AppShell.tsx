@@ -3,6 +3,7 @@ import { Outlet, NavLink, useLocation } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   Briefcase,
+  CreditCard,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -30,6 +31,7 @@ const navItems = [
   { to: "/portfolio", label: "Portfolio", icon: Briefcase, hue: 175 },
   { to: "/watchlist", label: "Watchlist", icon: Star, hue: 50 },
   { to: "/track-record", label: "Track Record", icon: TrendingUp, hue: 145 },
+  { to: "/pricing", label: "Pricing", icon: CreditCard, hue: 35 },
   { to: "/settings", label: "Settings", icon: Settings, hue: 280 },
 ]
 
