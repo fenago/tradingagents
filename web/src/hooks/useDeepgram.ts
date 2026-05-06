@@ -10,7 +10,11 @@ type DeepgramToken = {
 let cached: DeepgramToken | null = null
 
 async function getToken(): Promise<string | null> {
-  if (cached && cached.expires_at > Date.now() + 30_000) return cached.key
+  // Tokens are short-lived (~30s from /v1/auth/grant). Refresh if we're
+  // within 5s of expiry — every voice action gets a fresh token in
+  // practice, which is fine since TTS is one-shot and STT only needs
+  // the token at WebSocket open.
+  if (cached && cached.expires_at > Date.now() + 5_000) return cached.key
   const { data, error } = await supabase.functions.invoke("deepgram-token", {
     body: {},
   })
@@ -18,13 +22,14 @@ async function getToken(): Promise<string | null> {
     toast.error(
       data?.detail ??
         data?.error ??
+        error?.message ??
         "Couldn't mint a Deepgram session — voice unavailable.",
     )
     return null
   }
   cached = {
     key: data.key,
-    expires_at: Date.now() + (data.expires_in ?? 600) * 1000,
+    expires_at: Date.now() + (data.expires_in ?? 30) * 1000,
   }
   return cached.key
 }
