@@ -8,6 +8,11 @@ import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton"
 import { InfoTip } from "@/components/ui/tooltip"
 import { useProfile, useUpdateProfile } from "@/hooks/useProfile"
+import {
+  PROVIDER_MODEL_SUGGESTIONS,
+  useProviderModels,
+  type Provider,
+} from "@/hooks/useLLMKeys"
 import { cn } from "@/lib/utils"
 
 type RunDefaults = {
@@ -119,10 +124,6 @@ export function RunDefaultsSettings() {
     return JSON.stringify(original) !== JSON.stringify(draft)
   }, [draft, profile?.run_defaults])
 
-  const provider = PROVIDER_PRESETS.find(
-    (p) => p.provider === merged.llm_provider,
-  )
-
   const setField = <K extends keyof RunDefaults>(
     key: K,
     value: RunDefaults[K],
@@ -214,38 +215,26 @@ export function RunDefaultsSettings() {
           <FieldLabel
             id="deep"
             label="Deep model"
-            hint="Used by Bull, Bear, Research Manager, Trader, Risk debators, and Portfolio Manager. Higher quality = better but more expensive."
+            hint="Used by Bull, Bear, Research Manager, Trader, Risk debators, and Portfolio Manager. List is fetched live from the provider — type any model name they expose."
           />
-          <select
+          <ModelInput
             id="deep"
+            provider={merged.llm_provider as Provider}
             value={merged.deep_think_llm}
-            onChange={(e) => setField("deep_think_llm", e.target.value)}
-            className="h-10 rounded-md border border-input bg-background px-3 text-sm"
-          >
-            {(provider?.deep ?? [merged.deep_think_llm]).map((m) => (
-              <option key={m} value={m}>
-                {m}
-              </option>
-            ))}
-          </select>
+            onChange={(v) => setField("deep_think_llm", v)}
+          />
 
           <FieldLabel
             id="quick"
             label="Quick model"
             hint="Used by the four fast analyst agents (Market, Sentiment, News, Fundamentals) that call data tools. Cheaper model is fine here."
           />
-          <select
+          <ModelInput
             id="quick"
+            provider={merged.llm_provider as Provider}
             value={merged.quick_think_llm}
-            onChange={(e) => setField("quick_think_llm", e.target.value)}
-            className="h-10 rounded-md border border-input bg-background px-3 text-sm"
-          >
-            {(provider?.quick ?? [merged.quick_think_llm]).map((m) => (
-              <option key={m} value={m}>
-                {m}
-              </option>
-            ))}
-          </select>
+            onChange={(v) => setField("quick_think_llm", v)}
+          />
         </div>
       </Section>
 
@@ -402,6 +391,64 @@ function FieldLabel({
         {label}
       </Label>
       <InfoTip>{hint}</InfoTip>
+    </div>
+  )
+}
+
+function ModelInput({
+  id,
+  provider,
+  value,
+  onChange,
+}: {
+  id: string
+  provider: Provider
+  value: string
+  onChange: (v: string) => void
+}) {
+  // Live model list from the provider via the user's BYOK key. Falls back
+  // to seed suggestions when the live API can't be reached.
+  const { data, isFetching } = useProviderModels(provider, true)
+  const live = data?.models ?? []
+  const fallback = PROVIDER_MODEL_SUGGESTIONS[provider] ?? []
+  const choices: Array<{ id: string; label?: string }> =
+    live.length > 0 ? live : fallback.map((id) => ({ id }))
+  const inList = choices.some((c) => c.id === value)
+
+  return (
+    <div className="space-y-1.5">
+      <select
+        id={id}
+        value={inList || !value ? value : "__custom"}
+        onChange={(e) => {
+          if (e.target.value === "__custom") return
+          onChange(e.target.value)
+        }}
+        className="h-10 w-full rounded-md border border-input bg-background px-3 font-mono text-sm"
+      >
+        <option value="">— pick a model —</option>
+        {choices.map((m) => (
+          <option key={m.id} value={m.id}>
+            {m.label ? `${m.id} — ${m.label}` : m.id}
+          </option>
+        ))}
+        {value && !inList && (
+          <option value="__custom">{value} (custom)</option>
+        )}
+      </select>
+      <Input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="Or type a custom model name"
+        className="h-9 font-mono text-xs"
+      />
+      <div className="text-[10px] text-muted-foreground">
+        {isFetching
+          ? "loading live catalog…"
+          : live.length > 0
+            ? `${live.length} models · live from provider`
+            : "fallback list — connect a key for that provider to fetch live"}
+      </div>
     </div>
   )
 }

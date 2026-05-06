@@ -28,6 +28,7 @@ import { useAuth } from "@/hooks/useAuth"
 import { supabase } from "@/lib/supabase"
 import { sfx } from "@/lib/sfx"
 import { formatCurrency } from "@/lib/utils"
+import { usePortfolio } from "@/hooks/usePortfolio"
 
 type Connection = {
   broker: string
@@ -332,6 +333,26 @@ function ConnectedBody({
   onChanged: () => void
 }) {
   const [working, setWorking] = useState(false)
+  // Pull live account stats from Alpaca instead of the snapshot stored at
+  // connect time — buying power and cash drift as the user trades.
+  const { data: portfolio } = usePortfolio()
+  const live = portfolio?.connections?.find(
+    (c) => c.paper_mode === (mode === "paper"),
+  )
+  const liveAccount = live?.account
+  const liveStatus =
+    liveAccount?.status?.toLowerCase() ??
+    connection.account_status?.toLowerCase() ??
+    null
+  const liveBuyingPower = liveAccount?.buying_power
+    ? Number(liveAccount.buying_power)
+    : connection.buying_power
+  const liveCash = liveAccount?.cash
+    ? Number(liveAccount.cash)
+    : connection.cash
+  const liveEquity = liveAccount?.equity
+    ? Number(liveAccount.equity)
+    : null
 
   const disconnect = async () => {
     if (
@@ -363,26 +384,23 @@ function ConnectedBody({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
     >
-      <div className="grid grid-cols-3 divide-x divide-border/50">
+      <div className="grid grid-cols-2 divide-x divide-border/50 sm:grid-cols-4">
+        <Stat label="Status" value={liveStatus ?? "—"} />
         <Stat
-          label="Status"
-          value={connection.account_status?.toLowerCase() ?? "—"}
+          label="Equity"
+          value={liveEquity != null ? formatCurrency(liveEquity, 0) : "—"}
         />
         <Stat
           label="Buying power"
           value={
-            connection.buying_power != null
-              ? formatCurrency(connection.buying_power, 0)
+            liveBuyingPower != null
+              ? formatCurrency(liveBuyingPower, 0)
               : "—"
           }
         />
         <Stat
           label="Cash"
-          value={
-            connection.cash != null
-              ? formatCurrency(connection.cash, 0)
-              : "—"
-          }
+          value={liveCash != null ? formatCurrency(liveCash, 0) : "—"}
         />
       </div>
       <div className="flex items-center gap-3 border-t border-border/50 px-5 py-3 text-xs text-muted-foreground">
